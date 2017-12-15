@@ -61,8 +61,8 @@ class Client:
                        headers=self.auth_header)
         return r
     
-    def AddTransaction(self,debitor_id,creditor_id,amount,infos):
-        data={'debitor_id':debitor_id,'creditor_id':creditor_id,'amount':amount,'infos':infos}
+    def AddTransaction(self,debitor_id,creditor_id,amount,debited,infos):
+        data={'debitor_id':debitor_id,'creditor_id':creditor_id,'amount':amount,'debited':debited,'infos':infos}
         r=requests.post('https://api.software.dessia.tech/transactions/add',
                        headers=self.auth_header,data=data)
         return r
