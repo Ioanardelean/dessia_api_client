@@ -8,9 +8,12 @@ Created on Thu Dec 14 14:59:51 2017
 
 from dessia_api_client import Client
 
-client=Client('username','password')
+client=Client('masfaraud','admin')
 
-r=client.AddTransaction(1,2,30,'test')
-print(r)
 
-r.cli
+#r=client.AddUser('dumouchel','admin','Pierre-Emmanuel','Dumouchel','dumouchel@dessia.tech')
+#print(r)
+#r=client.AddTransaction(1,2,3.456,False,'test')
+
+#r=client.TransactionDetails(24)
+#print(r)

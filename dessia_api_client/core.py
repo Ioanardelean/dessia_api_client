@@ -51,6 +51,12 @@ class Client:
     
     auth_header=property(_get_auth_header)
     
+    def AddUser(self,username,password,first_name,last_name,email):
+        data={'username':username,'password':password,'first_name':first_name,
+              'last_name':last_name,'email':email}
+        r=requests.post('https://api.software.dessia.tech/users/add',data=data)
+        return r
+    
         
     def MyAccount(self):
         r=requests.get('https://api.software.dessia.tech/myaccount',headers=self.auth_header)
