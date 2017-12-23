@@ -27,7 +27,11 @@ class AuthenticationError(Exception):
     pass
     
 class Client:
-    def __init__(self,username,password):
+    def __init__(self,username=None,password=None):
+        if username is None:
+            username=input('Username for DessIA API:')
+        if password is None:
+            password=input('Password for DessIA API:')
         self.username=username
         self.password=password
         self.token=None
