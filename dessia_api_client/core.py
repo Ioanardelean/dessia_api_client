@@ -57,6 +57,10 @@ class Client:
         r=requests.post('https://api.software.dessia.tech/users/add',data=data)
         return r
     
+    def VerifyEmail(self,token):
+        data={'token':token}
+        r=requests.post('https://api.software.dessia.tech/users/verify_email',data=data)
+        return r
         
     def MyAccount(self):
         r=requests.get('https://api.software.dessia.tech/myaccount',headers=self.auth_header)
