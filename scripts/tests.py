@@ -8,13 +8,15 @@ Created on Thu Dec 14 14:59:51 2017
 
 from dessia_api_client import Client
 
-client=Client('masfaraud','admin')
+client=Client('masfaraud@dessia.tech')
 
 
-#r=client.AddUser('test','admin','Prénom','Nom','root@dessia.tech')
+#r=client.AddUser('admin','Prénom','Nom','root@dessia.tech')
 #print(r)
 #r=client.AddTransaction(1,2,3.456,False,'test')
-
 #r=client.TransactionDetails(24)
-r=client.VerifyEmail('InJvb3RAZGVzc2lhLnRlY2gi.DR_0GQ.AtSO6m3s284s9dAy6FC5yJdnu-kM')
+#r=client.VerifyEmail('InJvb3RAZGVzc2lhLnRlY2gi.DR_0GQ.AtSO6m3s284s9dAy6FC5yJdnu-kM')
+r=client.CompanyDetails(2)
+r=client.UserTeams()
+r=client.CreateTeam('test')
 print(r)

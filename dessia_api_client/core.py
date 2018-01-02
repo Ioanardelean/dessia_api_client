@@ -17,22 +17,16 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
 
 
-#from requests_jwt import JWTAuth
-
-#payload = {'key1': 'value1', 'key2': 'value2'}
-#
-#>>> r = requests.post("http://httpbin.org/post", data=payload)
-
 class AuthenticationError(Exception):
     pass
     
 class Client:
-    def __init__(self,username=None,password=None):
-        if username is None:
-            username=input('Username for DessIA API:')
+    def __init__(self,email=None,password=None):
+        if email is None:
+            email=input('email for DessIA API:')
         if password is None:
             password=input('Password for DessIA API:')
-        self.username=username
+        self.email=email
         self.password=password
         self.token=None
         self.token_exp=0.
@@ -41,7 +35,7 @@ class Client:
         if self.token_exp<time.time():
             print('Token expired, reauth')
             # Authenticate
-            r = requests.post('https://api.software.dessia.tech/auth', json={"username": self.username,"password":self.password})
+            r = requests.post('https://api.software.dessia.tech/auth', json={"email": self.email,"password":self.password})
             print(r)
             if r.status_code==200:
                 self.token=r.json()['access_token']
@@ -55,60 +49,89 @@ class Client:
     
     auth_header=property(_get_auth_header)
     
-    def AddUser(self,username,password,first_name,last_name,email):
+    def CreateUser(self,username,password,first_name,last_name,email):
         data={'username':username,'password':password,'first_name':first_name,
               'last_name':last_name,'email':email}
-        r=requests.post('https://api.software.dessia.tech/users/add',data=data)
+        r=requests.post('https://api.software.dessia.tech/user/create',json=data)
         return r
     
     def VerifyEmail(self,token):
         data={'token':token}
-        r=requests.post('https://api.software.dessia.tech/users/verify_email',data=data)
+        r=requests.post('https://api.software.dessia.tech/user/verify_email',json=data)
         return r
         
     def MyAccount(self):
-        r=requests.get('https://api.software.dessia.tech/myaccount',headers=self.auth_header)
+        r=requests.get('https://api.software.dessia.tech/account/infos',headers=self.auth_header)
         return r
     
     def TransactionDetails(self,transaction_id):
-        r=requests.get('https://api.software.dessia.tech/transactions/{}'.format(transaction_id),
+        r=requests.get('https://api.software.dessia.tech/transaction/{}'.format(transaction_id),
                        headers=self.auth_header)
         return r
     
-    def AddTransaction(self,debitor_id,creditor_id,amount,debited,infos):
+    def CreateTransaction(self,debitor_id,creditor_id,amount,debited,infos):
         data={'debitor_id':debitor_id,'creditor_id':creditor_id,'amount':amount,'debited':debited,'infos':infos}
-        r=requests.post('https://api.software.dessia.tech/transactions/add',
-                       headers=self.auth_header,data=data)
+        r=requests.post('https://api.software.dessia.tech/transaction/create',
+                       headers=self.auth_header,json=data)
         return r
     
     def Model3DResultsKeys(self):
-        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_results/keys',headers=self.auth_header)
+        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_results/keys',
+                       headers=self.auth_header)
         return r
         
     def AddModel3DResult(self,result,name,infos):
         data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-        r=requests.post('https://api.software.dessia.tech/powertransmission/database/model3d_result/add',headers=self.auth_header,data=data)
+        r=requests.post('https://api.software.dessia.tech/powertransmission/database/model3d_result/add',
+                        headers=self.auth_header,json=data)
         return r
     
     def GetModel3DResult(self,id_result):
-        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/object/{}'.format(id_result),headers=self.auth_header)
+        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/{}/object'.format(id_result),
+                       headers=self.auth_header)
         if r.status_code==200:
             return jsonpickle.decode(r.text,keys=True)
         else:
             return r
     
     def GetModel3DTextReport(self,id_result):
-        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/text_report/{}'.format(id_result),headers=self.auth_header)
+        r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/{}/text_report'.format(id_result),
+                       headers=self.auth_header)
         return r
         
     def SubmitModel3DOptimization(self,model3d,bounds_sl):
         data={'model3d_optimizer':jsonpickle.encode(model3d,keys=True),
               'bounds_shaft_lines':jsonpickle.encode(bounds_sl,keys=True),
               'infos':''}
-        r=requests.post('https://api.software.dessia.tech/powertransmission/jobs/optimization3d/submit',headers=self.auth_header,data=data)
+        r=requests.post('https://api.software.dessia.tech/powertransmission/jobs/optimization3d/submit',
+                        headers=self.auth_header,json=data)
         return r
         
-    def JobDetails(self,id_job):
-        r=requests.get('https://api.software.dessia.tech/jobs/infos/{}'.format(id_job),headers=self.auth_header)
+    def JobDetails(self,job_id):
+        r=requests.get('https://api.software.dessia.tech/job/{}/infos'.format(job_id),
+                       headers=self.auth_header)
         return r
 
+
+    def CompanyDetails(self,company_id):
+        r=requests.get('https://api.software.dessia.tech/company/{}'.format(company_id),
+                       headers=self.auth_header)
+        return r
+    
+    def UserTeams(self):
+        r=requests.get('https://api.software.dessia.tech/teams/list',
+                       headers=self.auth_header)
+        return r
+    
+    def CreateTeam(self,name,membership=True):
+        data={'name':name,'membership':membership}
+        r=requests.post('https://api.software.dessia.tech/team/create',
+                       headers=self.auth_header,json=data)
+        return r
+    
+    def CreateProject(self,name,owner_type='user',owner_id=None):
+        data={'name':name,'owner_type':owner_type,'owner_id':owner_id}
+        r=requests.post('https://api.software.dessia.tech/projects/create',
+                       headers=self.auth_header,json=data)
+        return r
+    
