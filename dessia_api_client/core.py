@@ -86,6 +86,12 @@ class Client:
                         headers=self.auth_header,json=data)
         return r
     
+    def AddResult(self,result,name,infos):
+        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+        r=requests.post('https://api.software.dessia.tech/results/add',
+                        headers=self.auth_header,json=data)
+        return r
+    
     def GetModel3DResult(self,id_result):
         r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/{}/object'.format(id_result),
                        headers=self.auth_header)
@@ -104,6 +110,12 @@ class Client:
               'bounds_shaft_lines':jsonpickle.encode(bounds_sl,keys=True),
               'infos':''}
         r=requests.post('https://api.software.dessia.tech/powertransmission/jobs/optimization3d/submit',
+                        headers=self.auth_header,json=data)
+        return r
+    
+    def SubmitJob(self,job_type,input_data):
+        data={'job_type':job_type,'input_data':input_data}
+        r=requests.post('https://api.software.dessia.tech/job/submit',
                         headers=self.auth_header,json=data)
         return r
         
@@ -133,5 +145,20 @@ class Client:
         data={'name':name,'owner_type':owner_type,'owner_id':owner_id}
         r=requests.post('https://api.software.dessia.tech/projects/create',
                        headers=self.auth_header,json=data)
+        return r
+    
+    def Users(self,users_id):
+        r=requests.post('https://api.software.dessia.tech/users',
+                       headers=self.auth_header,json=users_id)
+        return r
+    
+    def Teams(self,teams_id):
+        r=requests.post('https://api.software.dessia.tech/teams',
+                       headers=self.auth_header,json=teams_id)
+        return r
+    
+    def MyTeamsInvitation(self):
+        r=requests.get('https://api.software.dessia.tech/account/team_invitations',
+                       headers=self.auth_header)
         return r
     
