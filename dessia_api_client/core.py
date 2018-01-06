@@ -109,7 +109,30 @@ class Client:
         data={'celery_id':celery_id,'owner_type':owner_type,'owner_id':owner_id}
         r=requests.post('https://api.software.dessia.tech/jobs/create',
                        headers=self.auth_header,json=data)
-        return r        
+        return r    
+
+    def SubmitJob(self,job_type,input_data):
+        data={'job_type':job_type,'input_data':input_data}
+        r=requests.post('https://api.software.dessia.tech/job/submit',
+                        headers=self.auth_header,json=data)
+        return r
+        
+    
+    def Users(self,users_id):
+        r=requests.post('https://api.software.dessia.tech/users',
+                       headers=self.auth_header,json=users_id)
+        return r
+    
+    def Teams(self,teams_id):
+        r=requests.post('https://api.software.dessia.tech/teams',
+                       headers=self.auth_header,json=teams_id)
+        return r
+    
+    def MyTeamsInvitation(self):
+        r=requests.get('https://api.software.dessia.tech/account/team_invitations',
+                       headers=self.auth_header)
+        return r
+    
     
 
 # =============================================================================
@@ -121,9 +144,21 @@ class Client:
                        headers=self.auth_header)
         return r
         
-    def AddModel3DResult(self,result,name,infos):
+    def AddModel3DResult(self,result,name,infos,owner_type='user',owner_id=None):
         data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+        if owner_id:
+            data['owner_type']=owner_type
+            data['owner_id']=owner_id
         r=requests.post('https://api.software.dessia.tech/powertransmission/database/model3d_result/add',
+                        headers=self.auth_header,json=data)
+        return r
+    
+    def AddResult(self,result,name,infos,owner_type='user',owner_id=None):
+        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+        if owner_id:
+            data['owner_type']=owner_type
+            data['owner_id']=owner_id
+        r=requests.post('https://api.software.dessia.tech/results/add',
                         headers=self.auth_header,json=data)
         return r
     
@@ -147,4 +182,7 @@ class Client:
         r=requests.post('https://api.software.dessia.tech/powertransmission/jobs/optimization3d/submit',
                         headers=self.auth_header,json=data)
         return r
+
+    
+
     
