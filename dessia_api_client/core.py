@@ -52,12 +52,12 @@ class Client:
     def CreateUser(self,username,password,first_name,last_name,email):
         data={'username':username,'password':password,'first_name':first_name,
               'last_name':last_name,'email':email}
-        r=requests.post('https://api.software.dessia.tech/user/create',json=data)
+        r=requests.post('https://api.software.dessia.tech/users/create',json=data)
         return r
     
     def VerifyEmail(self,token):
         data={'token':token}
-        r=requests.post('https://api.software.dessia.tech/user/verify_email',json=data)
+        r=requests.post('https://api.software.dessia.tech/users/verify_email',json=data)
         return r
         
     def MyAccount(self):
@@ -65,15 +65,56 @@ class Client:
         return r
     
     def TransactionDetails(self,transaction_id):
-        r=requests.get('https://api.software.dessia.tech/transaction/{}'.format(transaction_id),
+        r=requests.get('https://api.software.dessia.tech/transactions/{}'.format(transaction_id),
                        headers=self.auth_header)
         return r
     
     def CreateTransaction(self,debitor_id,creditor_id,amount,debited,infos):
         data={'debitor_id':debitor_id,'creditor_id':creditor_id,'amount':amount,'debited':debited,'infos':infos}
-        r=requests.post('https://api.software.dessia.tech/transaction/create',
+        r=requests.post('https://api.software.dessia.tech/transactions/create',
                        headers=self.auth_header,json=data)
         return r
+    
+
+        
+    def JobDetails(self,job_id):
+        r=requests.get('https://api.software.dessia.tech/jobs/{}'.format(job_id),
+                       headers=self.auth_header)
+        return r
+
+
+    def CompanyDetails(self,company_id):
+        r=requests.get('https://api.software.dessia.tech/companies/{}'.format(company_id),
+                       headers=self.auth_header)
+        return r
+    
+    def UserTeams(self):
+        r=requests.get('https://api.software.dessia.tech/teams/list',
+                       headers=self.auth_header)
+        return r
+    
+    def CreateTeam(self,name,membership=True):
+        data={'name':name,'membership':membership}
+        r=requests.post('https://api.software.dessia.tech/teams/create',
+                       headers=self.auth_header,json=data)
+        return r
+    
+    def CreateProject(self,name,owner_type='user',owner_id=None):
+        data={'name':name,'owner_type':owner_type,'owner_id':owner_id}
+        r=requests.post('https://api.software.dessia.tech/projects/create',
+                       headers=self.auth_header,json=data)
+        return r
+    
+    def CreateJob(self,celery_id,owner_type,owner_id):
+        data={'celery_id':celery_id,'owner_type':owner_type,'owner_id':owner_id}
+        r=requests.post('https://api.software.dessia.tech/jobs/create',
+                       headers=self.auth_header,json=data)
+        return r        
+    
+
+# =============================================================================
+#                           Deprecated
+# =============================================================================
     
     def Model3DResultsKeys(self):
         r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_results/keys',
@@ -105,33 +146,5 @@ class Client:
               'infos':''}
         r=requests.post('https://api.software.dessia.tech/powertransmission/jobs/optimization3d/submit',
                         headers=self.auth_header,json=data)
-        return r
-        
-    def JobDetails(self,job_id):
-        r=requests.get('https://api.software.dessia.tech/job/{}/infos'.format(job_id),
-                       headers=self.auth_header)
-        return r
-
-
-    def CompanyDetails(self,company_id):
-        r=requests.get('https://api.software.dessia.tech/company/{}'.format(company_id),
-                       headers=self.auth_header)
-        return r
-    
-    def UserTeams(self):
-        r=requests.get('https://api.software.dessia.tech/teams/list',
-                       headers=self.auth_header)
-        return r
-    
-    def CreateTeam(self,name,membership=True):
-        data={'name':name,'membership':membership}
-        r=requests.post('https://api.software.dessia.tech/team/create',
-                       headers=self.auth_header,json=data)
-        return r
-    
-    def CreateProject(self,name,owner_type='user',owner_id=None):
-        data={'name':name,'owner_type':owner_type,'owner_id':owner_id}
-        r=requests.post('https://api.software.dessia.tech/projects/create',
-                       headers=self.auth_header,json=data)
         return r
     
