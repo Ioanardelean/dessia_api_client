@@ -75,7 +75,9 @@ class Client:
                        headers=self.auth_header,json=data)
         return r
     
-
+    def Jobs(self):
+        r=requests.get('https://api.software.dessia.tech/jobs',headers=self.auth_header)
+        return r
         
     def JobDetails(self,job_id):
         r=requests.get('https://api.software.dessia.tech/jobs/{}'.format(job_id),
@@ -111,9 +113,12 @@ class Client:
                        headers=self.auth_header,json=data)
         return r    
 
-    def SubmitJob(self,job_type,input_data):
+    def SubmitJob(self,job_type,input_data,owner_type='user',owner_id=None):
         data={'job_type':job_type,'input_data':input_data}
-        r=requests.post('https://api.software.dessia.tech/job/submit',
+        if owner_id:
+            data['owner_type']=owner_type
+            data['owner_id']=owner_id
+        r=requests.post('https://api.software.dessia.tech/jobs/submit',
                         headers=self.auth_header,json=data)
         return r
         
@@ -134,7 +139,15 @@ class Client:
         return r
     
     
-
+    def CreateResult(self,result,name,infos,owner_type='user',owner_id=None):
+        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+        if owner_id:
+            data['owner_type']=owner_type
+            data['owner_id']=owner_id
+        r=requests.post('https://api.software.dessia.tech/results/create',
+                        headers=self.auth_header,json=data)
+        return r
+    
 # =============================================================================
 #                           Deprecated
 # =============================================================================
@@ -153,14 +166,7 @@ class Client:
                         headers=self.auth_header,json=data)
         return r
     
-    def AddResult(self,result,name,infos,owner_type='user',owner_id=None):
-        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-        if owner_id:
-            data['owner_type']=owner_type
-            data['owner_id']=owner_id
-        r=requests.post('https://api.software.dessia.tech/results/add',
-                        headers=self.auth_header,json=data)
-        return r
+
     
     def GetModel3DResult(self,id_result):
         r=requests.get('https://api.software.dessia.tech/powertransmission/database/model3d_result/{}/object'.format(id_result),
