@@ -147,6 +147,25 @@ class Client:
         r=requests.post('https://api.software.dessia.tech/results/create',
                         headers=self.auth_header,json=data)
         return r
+
+
+    def Result(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}'.format(result_id),
+                       headers=self.auth_header)
+        return r
+
+    def ResultDict(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/dict'.format(result_id),
+                       headers=self.auth_header)
+        return r
+    
+    def ResultObject(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/object'.format(result_id),
+                       headers=self.auth_header)
+        if r.status_code==200:
+            return jsonpickle.decode(r.text,keys=True)
+        else:
+            return r
     
 # =============================================================================
 #                           Deprecated
