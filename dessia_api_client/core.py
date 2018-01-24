@@ -58,48 +58,23 @@ class Client:
     
     auth_header=property(_get_auth_header)
     
-    def CreateUser(self,username,password,first_name,last_name,email):
-        data={'username':username,'password':password,'first_name':first_name,
-              'last_name':last_name,'email':email}
-        r=requests.post('{}/user/create'.format(self.api_url),json=data)
+    def CreateUser(self,email,password,first_name,last_name):
+        data={'email':email,'password':password,'first_name':first_name,
+              'last_name':last_name}
+        r=requests.post('{}/users/create'.format(self.api_url),json=data)
 
         return r
     
     def VerifyEmail(self,token):
         data={'token':token}
-        r=requests.post('{}/user/verify_email'.format(self.api_url),json=data)
-
+        r=requests.post('{}/account/verify-email'.format(self.api_url),json=data)
         return r
         
     def MyAccount(self):
         r=requests.get('{}/account/infos'.format(self.api_url),headers=self.auth_header)
         return r
     
-    def TransactionDetails(self,transaction_id):
-        r=requests.get('{}/transaction/{}'.format(transaction_id),
-                       headers=self.auth_header)
-        return r
-    
-    def CreateTransaction(self,debitor_id,creditor_id,amount,debited,infos):
-        data={'debitor_id':debitor_id,'creditor_id':creditor_id,'amount':amount,'debited':debited,'infos':infos}
-        r=requests.post('{}/transaction/create'.format(self.api_url),
-                       headers=self.auth_header,json=data)
-        return r
-    
-    def Model3DResultsKeys(self):
-        r=requests.get('{}/powertransmission/database/model3d_results/keys'.format(self.api_url),
-                       headers=self.auth_header)
-        return r
         
-    def AddModel3DResult(self,result,name,infos,owner_type='user',owner_id=None):
-        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-        if owner_id:
-            data['owner_type']=owner_type
-            data['owner_id']=owner_id
-        r=requests.post('{}/powertransmission/database/model3d_result/add'.format(self.api_url),
-                        headers=self.auth_header,json=data)
-        return r
-    
     def AddResult(self,result,name,infos,owner_type='user',owner_id=None):
         data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
         if owner_id:
@@ -109,26 +84,6 @@ class Client:
                         headers=self.auth_header,json=data)
         return r
     
-    def GetModel3DResult(self,id_result):
-        r=requests.get('{}/powertransmission/database/model3d_result/{}/object'.format(self.api_url,id_result),
-                       headers=self.auth_header)
-        if r.status_code==200:
-            return jsonpickle.decode(r.text,keys=True)
-        else:
-            return r
-    
-    def GetModel3DTextReport(self,id_result):
-        r=requests.get('{}/powertransmission/database/model3d_result/{}/text_report'.format(self.api_url,id_result),
-                       headers=self.auth_header)
-        return r
-        
-    def SubmitModel3DOptimization(self,model3d,bounds_sl):
-        data={'model3d_optimizer':jsonpickle.encode(model3d,keys=True),
-              'bounds_shaft_lines':jsonpickle.encode(bounds_sl,keys=True),
-              'infos':''}
-        r=requests.post('{}/powertransmission/jobs/optimization3d/submit'.format(self.api_url),
-                        headers=self.auth_header,json=data)
-        return r
     
     def SubmitJob(self,job_type,input_data):
         data={'job_type':job_type,'input_data':input_data}
