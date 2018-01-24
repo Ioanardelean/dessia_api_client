@@ -62,11 +62,13 @@ class Client:
         data={'username':username,'password':password,'first_name':first_name,
               'last_name':last_name,'email':email}
         r=requests.post('{}/user/create'.format(self.api_url),json=data)
+
         return r
     
     def VerifyEmail(self,token):
         data={'token':token}
         r=requests.post('{}/user/verify_email'.format(self.api_url),json=data)
+
         return r
         
     def MyAccount(self):
@@ -136,12 +138,13 @@ class Client:
         
     def JobDetails(self,job_id):
         r=requests.get('{}/job/{}/infos'.format(self.api_url,job_id),
+
                        headers=self.auth_header)
         return r
 
 
     def CompanyDetails(self,company_id):
-        r=requests.get('{}/company/{}'.format(self.api_url,company_id),
+        r=requests.get('{}/companies/{}'.format(self.api_url,company_id),
                        headers=self.auth_header)
         return r
     
@@ -152,7 +155,7 @@ class Client:
     
     def CreateTeam(self,name,membership=True):
         data={'name':name,'membership':membership}
-        r=requests.post('{}/team/create'.format(self.api_url),
+        r=requests.post('{}/teams/create'.format(self.api_url),
                        headers=self.auth_header,json=data)
         return r
     
@@ -161,6 +164,22 @@ class Client:
         r=requests.post('{}/projects/create'.format(self.api_url),
                        headers=self.auth_header,json=data)
         return r
+    
+    def CreateJob(self,celery_id,owner_type,owner_id):
+        data={'celery_id':celery_id,'owner_type':owner_type,'owner_id':owner_id}
+        r=requests.post('https://api.software.dessia.tech/jobs/create',
+                       headers=self.auth_header,json=data)
+        return r    
+
+#    def SubmitJob(self,job_type,input_data,owner_type='user',owner_id=None):
+#        data={'job_type':job_type,'input_data':input_data}
+#        if owner_id:
+#            data['owner_type']=owner_type
+#            data['owner_id']=owner_id
+#        r=requests.post('https://api.software.dessia.tech/jobs/submit',
+#                        headers=self.auth_header,json=data)
+#        return r
+        
     
     def Users(self,users_id):
         r=requests.post('{}/users'.format(self.api_url),
@@ -176,4 +195,33 @@ class Client:
         r=requests.get('{}/account/team_invitations'.format(self.api_url),
                        headers=self.auth_header)
         return r
+    
+    
+    def CreateResult(self,result,name,infos,owner_type='user',owner_id=None):
+        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+        if owner_id:
+            data['owner_type']=owner_type
+            data['owner_id']=owner_id
+        r=requests.post('https://api.software.dessia.tech/results/create',
+                        headers=self.auth_header,json=data)
+        return r
+
+
+    def Result(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}'.format(result_id),
+                       headers=self.auth_header)
+        return r
+
+    def ResultDict(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/dict'.format(result_id),
+                       headers=self.auth_header)
+        return r
+    
+    def ResultObject(self,result_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/object'.format(result_id),
+                       headers=self.auth_header)
+        if r.status_code==200:
+            return jsonpickle.decode(r.text,keys=True)
+        else:
+            return r
     
