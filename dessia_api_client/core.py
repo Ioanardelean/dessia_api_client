@@ -22,9 +22,9 @@ class AuthenticationError(Exception):
     pass
     
 class Client:
-    def __init__(self,email=None,password=None,token=None,api_url='https://api.software.dessia.tech'):
+    def __init__(self,username=None,password=None,token=None,api_url='https://api.software.dessia.tech'):
 
-        self.email=email
+        self.username=username
         self.password=password
         self.token=token
         if self.token:
@@ -35,16 +35,16 @@ class Client:
 #        self.token_nbf=time.time()
     def _get_auth_header(self):
         if self.token_exp<time.time():
-            if (not self.email)|(not self.password):
-                if self.email is None:
-                    self.email=input('Email for DessIA API:')
+            if (not self.username)|(not self.password):
+                if self.username is None:
+                    self.username=input('Email(User)/name(Technical Account) for DessIA API:')
                 else:
                     print('Using {} as email'.format(self.email))
                 if self.password is None:
                     self.password=getpass.getpass('Password for DessIA API:')
             print('Token expired, reauth')
             # Authenticate
-            r = requests.post('{}/auth'.format(self.api_url), json={"email": self.email,"password":self.password})
+            r = requests.post('{}/auth'.format(self.api_url), json={"username": self.username,"password":self.password})
             print(r)
             if r.status_code==200:
                 self.token=r.json()['access_token']
@@ -62,6 +62,20 @@ class Client:
         data={'email':email,'password':password,'first_name':first_name,
               'last_name':last_name}
         r=requests.post('{}/users/create'.format(self.api_url),json=data)
+
+        return r
+    
+    def CreateTechnicalAccount(self,name,password,company_id=None,active=None,admin=None):
+        data={'name':name,'password':password}
+        if company_id!=None:
+            data['company_id']=company_id
+        if active!=None:
+            data['active']=active
+        if admin!=None:
+            data['admin']=admin
+            
+        r=requests.post('{}/technical_accounts/create'.format(self.api_url),
+                        json=data,headers=self.auth_header)
 
         return r
     
@@ -179,4 +193,10 @@ class Client:
             return jsonpickle.decode(r.text,keys=True)
         else:
             return r
+        
+    def ResultSTLToken(self,result_id,solution_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/solutions/{}/stl/token'.format(result_id,solution_id),
+                       headers=self.auth_header)
+        return r
+        
     
