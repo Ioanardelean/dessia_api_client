@@ -39,7 +39,7 @@ class Client:
                 if self.username is None:
                     self.username=input('Email(User)/name(Technical Account) for DessIA API:')
                 else:
-                    print('Using {} as email'.format(self.email))
+                    print('Using {} as email'.format(self.username))
                 if self.password is None:
                     self.password=getpass.getpass('Password for DessIA API:')
             print('Token expired, reauth')
@@ -99,7 +99,7 @@ class Client:
         return r
     
     
-    def SubmitJob(self,job_type,input_data):
+    def SubmitJob(self,job_type,input_dtrata):
         data={'job_type':job_type,'input_data':input_data}
         r=requests.post('{}/job/submit'.format(self.api_url),
                         headers=self.auth_header,json=data)
@@ -199,4 +199,14 @@ class Client:
                        headers=self.auth_header)
         return r
         
+    
+    def CreateUserCreditOperation(self,number_hours,user_id=None,validated=None):
+        data={'number_hours':number_hours}
+        if user_id is not None:
+            data['user_id']=user_id
+        if validated is not None:
+            data['validated']=validated
+        r=requests.post('https://api.software.dessia.tech/quotes/user_credit/create',headers=self.auth_header,json=data)
+    
+        return r
     
