@@ -200,12 +200,14 @@ class Client:
         return r
         
     
-    def CreateUserCreditOperation(self,number_hours,user_id=None,validated=None):
-        data={'number_hours':number_hours}
+    def CreateUserCreditOperation(self,number_hours,user_id=None,validated=None,price=None,caption=''):
+        data={'number_hours':number_hours,'caption':caption}
         if user_id is not None:
             data['user_id']=user_id
         if validated is not None:
             data['validated']=validated
+        if price is not None:
+            data['price']=price
         r=requests.post('https://api.software.dessia.tech/quotes/user_credit/create',headers=self.auth_header,json=data)
     
         return r
