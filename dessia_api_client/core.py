@@ -199,6 +199,11 @@ class Client:
                        headers=self.auth_header)
         return r
         
+    def ResultD3(self,result_id,solution_id):
+        r=requests.get('https://api.software.dessia.tech/results/{}/solutions/{}/d3'.format(result_id,solution_id),
+                       headers=self.auth_header)
+        return r
+        
     
     def CreateUserCreditOperation(self,number_hours,user_id=None,validated=None,price=None,caption=''):
         data={'number_hours':number_hours,'caption':caption}
