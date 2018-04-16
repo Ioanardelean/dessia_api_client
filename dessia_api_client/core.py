@@ -99,9 +99,9 @@ class Client:
         return r
     
     
-    def SubmitJob(self,job_type,input_dtrata):
-        data={'job_type':job_type,'input_data':input_data}
-        r=requests.post('{}/job/submit'.format(self.api_url),
+    def SubmitJob(self,job_type,input_data):
+        data={'analysis_type':job_type,'input_data':input_data}
+        r=requests.post('{}/jobs/submit'.format(self.api_url),
                         headers=self.auth_header,json=data)
         return r
         
