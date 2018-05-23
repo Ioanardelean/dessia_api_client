@@ -25,5 +25,5 @@ setup(name='dessia_api_client',
       author='Steven Masfaraud',
       author_email='masfaraud@dessia.tech',
       packages=['dessia_api_client'],
-      install_requires=[])
+      install_requires=['jsonpickle'])
 
