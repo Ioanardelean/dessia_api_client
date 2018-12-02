@@ -242,6 +242,15 @@ class Client:
                         headers=self.auth_header)
         return r
 
+    def GetObjectPlotData(self, object_class, object_id):
+        r = requests.get('{}/objects/{}/{}/plot_data'.format(self.api_url, object_class, object_id),
+                        headers=self.auth_header)
+        return r
+    
+    def GetObjectSTLToken(self, object_class, object_id):
+        r = requests.get('{}/objects/{}/{}/stl'.format(self.api_url, object_class, object_id),
+                        headers=self.auth_header)
+        return r
 
     def GetAllClassObjects(self, object_class):
         r = requests.get('{}/objects/{}'.format(self.api_url, object_class),
@@ -249,9 +258,11 @@ class Client:
         return r
 
     
-    def CreateObject(self, obj):
+    def CreateObject(self, obj, owner=None):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
                            'dict': StringifyDictKeys(obj.Dict())}}
+        if owner is not None:
+            data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
                         headers=self.auth_header,json=data)
         return r
