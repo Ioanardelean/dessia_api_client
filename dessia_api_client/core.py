@@ -12,7 +12,7 @@ import json
 import jwt
 import time
 import getpass
-
+import importlib
 import jsonpickle
 import jsonpickle.ext.numpy as jsonpickle_numpy
 jsonpickle_numpy.register_handlers()
@@ -35,7 +35,11 @@ class AuthenticationError(Exception):
     pass
     
 class Client:
-    def __init__(self,username=None,password=None,token=None,api_url='https://api.software.dessia.tech'):
+    def __init__(self,
+                 username=None,
+                 password=None,
+                 token=None,
+                 api_url='https://api.software.dessia.tech'):
 
         self.username=username
         self.password=password
@@ -58,7 +62,6 @@ class Client:
             print('Token expired, reauth')
             # Authenticate
             r = requests.post('{}/auth'.format(self.api_url), json={"username": self.username,"password":self.password})
-            print(r)
             if r.status_code==200:
                 self.token=r.json()['access_token']
                 self.token_exp=jwt.decode(self.token,verify=False)['exp']
@@ -237,9 +240,20 @@ class Client:
                         headers=self.auth_header)
         return r
     
-    def GetObject(self, object_class, object_id):
+    def GetObject(self, object_class, object_id, instantiate=True):
         r = requests.get('{}/objects/{}/{}'.format(self.api_url, object_class, object_id),
                         headers=self.auth_header)
+        if instantiate:
+            module_name = '.'.join(object_class.split('.')[:-1])
+            class_name = object_class.split('.')[-1]
+#            print('from {} import {}'.format(module, class_name))
+#            exec('from {} import {}'.format(module, class_name))
+#            print(globals().keys())
+#            object_class = globals()[class_name]
+            module = importlib.import_module(module_name)
+            object_class = getattr(module, class_name)
+            print(r.text, r.url)
+            return object_class.DictToObject(r.json())
         return r
 
     def GetObjectPlotData(self, object_class, object_id):
@@ -260,11 +274,19 @@ class Client:
     
     def CreateObject(self, obj, owner=None):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'dict': StringifyDictKeys(obj.Dict())}}
+                           'json': StringifyDictKeys(obj.Dict())}}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
-                        headers=self.auth_header,json=data)
+                        headers=self.auth_header ,json=data)
         return r
     
     
+    def ReplaceObject(self, object_class, object_id, new_object, owner=None):
+        data = {'object': {'class': object_class,
+                           'json': StringifyDictKeys(new_object.Dict())}}
+        if owner is not None:
+            data['owner'] = owner
+        r = requests.post('{}/objects/{}/{}/replace'.format(self.api_url, object_class, object_id),
+                        headers=self.auth_header, json=data)
+        return r
