@@ -183,14 +183,14 @@ class Client:
         return r
     
     
-    def CreateResult(self,result,name,infos,owner_type='user',owner_id=None):
-        data = {'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-        if owner_id:
-            data['owner_type']=owner_type
-            data['owner_id']=owner_id
-        r = requests.post('{}/results/create'.format(self.api_url),
-                        headers=self.auth_header,json=data)
-        return r
+#    def CreateResult(self,result,name,infos,owner_type='user',owner_id=None):
+#        data = {'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
+#        if owner_id:
+#            data['owner_type']=owner_type
+#            data['owner_id']=owner_id
+#        r = requests.post('{}/results/create'.format(self.api_url),
+#                        headers=self.auth_header,json=data)
+#        return r
 
 
 #    def Result(self,result_id):
@@ -239,7 +239,17 @@ class Client:
         r = requests.get('{}/objects/classes'.format(self.api_url),
                         headers=self.auth_header)
         return r
-    
+
+    def GetClassHierarchy(self):
+        r = requests.get('{}/objects/class_hierarchy'.format(self.api_url),
+                        headers=self.auth_header)
+        return r
+
+    def GetClassComposition(self, class_):
+        r = requests.get('{}/objects/class_composition/{}'.format(self.api_url, class_),
+                        headers=self.auth_header)
+        return r
+
     def GetObject(self, object_class, object_id, instantiate=True):
         r = requests.get('{}/objects/{}/{}'.format(self.api_url, object_class, object_id),
                         headers=self.auth_header)
@@ -289,4 +299,9 @@ class Client:
             data['owner'] = owner
         r = requests.post('{}/objects/{}/{}/replace'.format(self.api_url, object_class, object_id),
                         headers=self.auth_header, json=data)
+        return r
+    
+    def UpdateObject(self, object_class, object_id, update_dict):
+        r = requests.post('{}/objects/{}/{}/update'.format(self.api_url, object_class, object_id),
+                        headers=self.auth_header, json=update_dict)
         return r
