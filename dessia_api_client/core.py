@@ -262,7 +262,7 @@ class Client:
 #            object_class = globals()[class_name]
             module = importlib.import_module(module_name)
             object_class = getattr(module, class_name)
-            print(r.text, r.url)
+#            print(r.text, r.url)
             return object_class.DictToObject(r.json())
         return r
 
