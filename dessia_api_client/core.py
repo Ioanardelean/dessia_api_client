@@ -75,9 +75,14 @@ class Client:
     
     auth_header=property(_get_auth_header)
     
-    def CreateUser(self,email,password,first_name,last_name):
+    def CreateUser(self,email, password, first_name, last_name, standalone_user=True):
         data={'email':email,'password':password,'first_name':first_name,
               'last_name':last_name}
+        if standalone_user:
+            data['user_type'] = 'StandAloneUser'
+        else:
+            data['user_type'] = 'OrganizationUser'
+            
         r=requests.post('{}/users/create'.format(self.api_url),json=data)
 
         return r
@@ -256,13 +261,8 @@ class Client:
         if instantiate:
             module_name = '.'.join(object_class.split('.')[:-1])
             class_name = object_class.split('.')[-1]
-#            print('from {} import {}'.format(module, class_name))
-#            exec('from {} import {}'.format(module, class_name))
-#            print(globals().keys())
-#            object_class = globals()[class_name]
             module = importlib.import_module(module_name)
             object_class = getattr(module, class_name)
-#            print(r.text, r.url)
             return object_class.DictToObject(r.json())
         return r
 
