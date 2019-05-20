@@ -252,13 +252,13 @@ class Client:
         return r
 
     def GetObject(self, object_class, object_id, instantiate=True):
-        payload = {'embedded_subobjects': instantiate}
+        payload = {'embedded_subobjects': str(instantiate).casefold()}
         r = requests.get('{}/objects/{}/{}'.format(self.api_url,
                                                    object_class,
                                                    object_id),
                         headers=self.auth_header,
                         params=payload)
-        print(r.json())
+#        print(r.json())
         if instantiate:
             module_name = '.'.join(object_class.split('.')[:-1])
             class_name = object_class.split('.')[-1]
