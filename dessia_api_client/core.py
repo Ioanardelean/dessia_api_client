@@ -306,6 +306,11 @@ class Client:
         r = requests.post('{}/objects/{}/{}/update'.format(self.api_url, object_class, object_id),
                         headers=self.auth_header, json=update_dict)
         return r
+    
+    def delete_object(self, object_class, object_id):
+        r = requests.delete('{}/objects/{}/{}/delete'.format(self.api_url, object_class, object_id),
+                            headers=self.auth_header)
+        return r
 
     def DeleteAllSTL(self):
         r = requests.delete('{}/objects/stl/delete_all'.format(self.api_url),
