@@ -246,10 +246,18 @@ class Client:
                         headers=self.auth_header)
         return r
 
-    def GetClassComposition(self, class_):
-        r = requests.get('{}/objects/class_composition/{}'.format(self.api_url, class_),
-                        headers=self.auth_header)
-        return r
+#    def GetClassComposition(self, class_):
+#        r = requests.get('{}/objects/class_composition/{}'.format(self.api_url, class_),
+#                        headers=self.auth_header)
+#        return r
+
+    def get_class_metadata(self, class_):
+        """
+        Gets class metadata (_standalone_in_db, _jsonschema, and other class data)
+        """
+        request = requests.get('{}/objects/{}/metadata'.format(self.api_url, class_),
+                         headers=self.auth_header)
+        return request
 
     def GetObject(self, object_class, object_id, instantiate=True):
         payload = {'embedded_subobjects': str(instantiate).casefold()}
@@ -258,7 +266,6 @@ class Client:
                                                    object_id),
                         headers=self.auth_header,
                         params=payload)
-#        print(r.json())
         if instantiate:
             module_name = '.'.join(object_class.split('.')[:-1])
             class_name = object_class.split('.')[-1]
@@ -305,6 +312,11 @@ class Client:
     def UpdateObject(self, object_class, object_id, update_dict):
         r = requests.post('{}/objects/{}/{}/update'.format(self.api_url, object_class, object_id),
                         headers=self.auth_header, json=update_dict)
+        return r
+    
+    def delete_object(self, object_class, object_id):
+        r = requests.delete('{}/objects/{}/{}/delete'.format(self.api_url, object_class, object_id),
+                            headers=self.auth_header)
         return r
 
     def DeleteAllSTL(self):
