@@ -8,14 +8,10 @@ Created on Mon Nov 20 10:35:32 2017
 
 import requests
 
-import json
 import jwt
 import time
 import getpass
 import importlib
-import jsonpickle
-import jsonpickle.ext.numpy as jsonpickle_numpy
-jsonpickle_numpy.register_handlers()
 
 def StringifyDictKeys(d):
     if type(d) == list or type(d) == tuple:
@@ -105,17 +101,7 @@ class Client:
     def MyAccount(self):
         r=requests.get('{}/account/infos'.format(self.api_url),headers=self.auth_header)
         return r
-
-
-    def AddResult(self,result,name,infos,owner_type='user',owner_id=None):
-        data={'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-        if owner_id:
-            data['owner_type']=owner_type
-            data['owner_id']=owner_id
-        r=requests.post('{}/results/add'.format(self.api_url),
-                        headers=self.auth_header,json=data)
-        return r
-
+    
 
     def SubmitJob(self,job_type,input_data):
         data={'analysis_type':job_type,'input_data':input_data}
@@ -182,45 +168,6 @@ class Client:
         r = requests.get('{}/account/team_invitations'.format(self.api_url),
                        headers=self.auth_header)
         return r
-
-
-#    def CreateResult(self,result,name,infos,owner_type='user',owner_id=None):
-#        data = {'result':jsonpickle.encode(result,keys=True),'name':name,'infos':infos}
-#        if owner_id:
-#            data['owner_type']=owner_type
-#            data['owner_id']=owner_id
-#        r = requests.post('{}/results/create'.format(self.api_url),
-#                        headers=self.auth_header,json=data)
-#        return r
-
-
-#    def Result(self,result_id):
-#        r=requests.get('{}/results/{}'.format(self.api_url, result_id),
-#                       headers=self.auth_header)
-#        return r
-#
-#    def ResultDict(self,result_id):
-#        r=requests.get('{}/results/{}/dict'.format(self.api_url, result_id),
-#                       headers=self.auth_header)
-#        return r
-#
-#    def ResultObject(self,result_id):
-#        r=requests.get('{}/results/{}/object'.format(self.api_url, result_id),
-#                       headers=self.auth_header)
-#        if r.status_code == 200:
-#            return jsonpickle.decode(r.text,keys=True)
-#        else:
-#            return r
-#
-#    def ResultSTLToken(self,result_id,solution_id):
-#        r=requests.get('{}/results/{}/solutions/{}/stl/token'.format(self.api_url, result_id,solution_id),
-#                       headers=self.auth_header)
-#        return r
-#
-#    def ResultD3(self,result_id,solution_id):
-#        r=requests.get('{}/results/{}/solutions/{}/d3'.format(self.api_url, result_id,solution_id),
-#                       headers=self.auth_header)
-#        return r
 
 
     def CreateUserCreditOperation(self,number_hours,user_id=None,validated=None,price=None,caption=''):
