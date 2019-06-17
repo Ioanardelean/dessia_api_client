@@ -251,11 +251,11 @@ class Client:
 #                        headers=self.auth_header)
 #        return r
 
-    def get_class_metadata(self, class_):
+    def get_class_attributes(self, class_):
         """
-        Gets class metadata (_standalone_in_db, _jsonschema, and other class data)
+        Gets class attributes (_standalone_in_db, _jsonschema, and other class data)
         """
-        request = requests.get('{}/objects/{}/metadata'.format(self.api_url, class_),
+        request = requests.get('{}/objects/{}/attributes'.format(self.api_url, class_),
                          headers=self.auth_header)
         return request
 
