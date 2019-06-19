@@ -300,9 +300,11 @@ class Client:
         return r
 
 
-    def ReplaceObject(self, object_class, object_id, new_object, owner=None):
+    def ReplaceObject(self, object_class, object_id, new_object,
+                      embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
-                           'json': StringifyDictKeys(new_object.Dict())}}
+                           'json': StringifyDictKeys(new_object.Dict())},
+                'embedded_subobjects' : embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/{}/{}/replace'.format(self.api_url, object_class, object_id),
