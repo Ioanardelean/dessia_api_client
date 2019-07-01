@@ -218,12 +218,12 @@ class Client:
 #                        headers=self.auth_header)
 #        return r
 
-    def get_class_metadata(self, class_):
+    def get_class_attributes(self, class_):
         """
-        Gets class metadata (_standalone_in_db, _jsonschema, and other class data)
+        Gets class attributes (_standalone_in_db, _jsonschema, and other class data)
         """
-        request = requests.get('{}/objects/{}/metadata'.format(self.api_url, class_),
-                               headers=self.auth_header)
+        request = requests.get('{}/objects/{}/attributes'.format(self.api_url, class_),
+                         headers=self.auth_header)
         return request
 
     def GetObject(self, object_class, object_id, instantiate=True):
@@ -267,10 +267,11 @@ class Client:
         return r
 
 
-    def ReplaceObject(self, object_class, object_id, new_object, embedded_subobjects, owner=None):
+    def ReplaceObject(self, object_class, object_id, new_object,
+                      embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
                            'json': StringifyDictKeys(new_object.Dict())},
-                'embedded_subobjects': embedded_subobjects}
+                'embedded_subobjects' : embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/{}/{}/replace'.format(self.api_url, object_class, object_id),
