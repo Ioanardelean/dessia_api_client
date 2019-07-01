@@ -257,9 +257,10 @@ class Client:
         return r
 
 
-    def CreateObject(self, obj, owner=None):
+    def CreateObject(self, obj, owner=None, embedded_subobjects=True):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'json': StringifyDictKeys(obj.Dict())}}
+                           'json': StringifyDictKeys(obj.Dict())},
+                'embedded_subobjects': embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
