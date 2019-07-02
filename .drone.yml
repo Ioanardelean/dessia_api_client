@@ -24,4 +24,4 @@ steps:
     seafile_token:
       from_secret: seafile_token
     files: dist/*
-    root_directory: /powerpack/
+    root_directory: /dessia_api_client/
