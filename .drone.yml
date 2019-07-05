@@ -5,6 +5,7 @@ steps:
 - name: install
   image: python:3
   commands:
+  - git fetch --tags
   - python setup.py install
 
 - name: generate sdist
