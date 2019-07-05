@@ -112,15 +112,18 @@ class Client:
         return r
 
 
-    def SubmitJob(self, Object, method):
-        data = {'object': Object,
-                'method': method}
+    def SubmitJob(self, obj, Id, method):
+        data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
+                           'id': Id}, 'method': method}
+#        data = {'object': StringifyDictKeys(Object.Dict()),
+#                'method': method}
+        print(data)
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header, json=data)
         return r
 
     def JobDetails(self, job_id):
-        r = requests.get('{}/job/{}/infos'.format(self.api_url, job_id),
+        r = requests.get('{}/jobs/{}'.format(self.api_url, job_id),
                          headers=self.auth_header)
         return r
 
