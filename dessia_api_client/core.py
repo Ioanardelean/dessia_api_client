@@ -293,3 +293,32 @@ class Client:
         r = requests.delete('{}/objects/stl/delete_all'.format(self.api_url),
                         headers=self.auth_header)
         return r
+    
+    def get_all_manufacturers(self):
+        r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
+                         headers=self.auth_header)
+        return r
+
+
+    def create_manufacturer(self, name, url, country):
+        data = {'name': name,
+                'url': url,
+                'country': country}
+        r = requests.post('{}/marketplace/manufacturers'.format(self.api_url),
+                          headers=self.auth_header, json=data)
+        return r
+
+    
+    def get_all_brands(self):
+        r = requests.get('{}/marketplace/brands'.format(self.api_url),
+                         headers=self.auth_header)
+        return r
+    
+    def create_brand(self, name, url, country, manufacturer_id):
+        data = {'name': name,
+                'url': url,
+                'country': country,
+                'manufacturer_id': manufacturer_id}
+        r = requests.post('{}/marketplace/brands'.format(self.api_url),
+                          headers=self.auth_header, json=data)
+        return r
