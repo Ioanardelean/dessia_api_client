@@ -298,6 +298,7 @@ class Client:
                            'json': StringifyDictKeys(obj.Dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
+        print(data)
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
@@ -385,4 +386,28 @@ class Client:
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
+        return r
+    
+    def create_product(self, name, url, brand_id, object_class, object_id):
+        data = {'name': name,
+                'url': url,
+                'brand_id': brand_id,
+                'object_class': object_class,
+                'object_id': object_id}
+        r = requests.post('{}/marketplace/products'.format(self.api_url),
+                          headers=self.auth_header,
+                          json=data,
+                          proxies=self.proxies)
+        return r
+    
+    def get_all_products(self):
+        r = requests.get('{}/marketplace/products'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def get_product(self, product_id):
+        r = requests.get('{}/marketplace/products/{}'.format(self.api_url, product_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
         return r
