@@ -257,10 +257,11 @@ class Client:
         return r
 
 
-    def CreateObject(self, obj, owner=None, embedded_subobjects=True):
+    def CreateObject(self, obj, owner=None, embedded_subobjects=True, public=False):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
                            'json': StringifyDictKeys(obj.Dict())},
-                'embedded_subobjects': embedded_subobjects}
+                'embedded_subobjects': embedded_subobjects,
+                'public': public}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
@@ -298,6 +299,12 @@ class Client:
         r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
                          headers=self.auth_header)
         return r
+    
+    def get_manufacturer(self, manufacturer_id):
+        r = requests.get('{}/marketplace/manufacturers/{}'.format(self.api_url,
+                                                                  manufacturer_id),
+                         headers=self.auth_header)
+        return r
 
 
     def create_manufacturer(self, name, url, country):
@@ -311,6 +318,12 @@ class Client:
     
     def get_all_brands(self):
         r = requests.get('{}/marketplace/brands'.format(self.api_url),
+                         headers=self.auth_header)
+        return r
+    
+    def get_brand(self, brand_id):
+        r = requests.get('{}/marketplace/brands/{}'.format(self.api_url,
+                                                           brand_id),
                          headers=self.auth_header)
         return r
     
