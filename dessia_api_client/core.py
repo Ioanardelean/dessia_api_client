@@ -388,12 +388,19 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    def create_product(self, name, url, brand_id, object_class, object_id):
+    def create_product(self, name, url, brand_id, object_class, object_id,
+                       image_url=None, documentation_url=None):
         data = {'name': name,
                 'url': url,
                 'brand_id': brand_id,
                 'object_class': object_class,
                 'object_id': object_id}
+        
+        if image_url is not None:
+            data['image_url'] = image_url
+        if documentation_url is not None:
+            data['documentation_url'] = documentation_url
+        
         r = requests.post('{}/marketplace/products'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
