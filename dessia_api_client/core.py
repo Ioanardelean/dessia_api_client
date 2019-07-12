@@ -479,12 +479,14 @@ class Client:
                          proxies=self.proxies)
         return r
     
-    def create_price_offer(self, sku_id, min_quantity, max_quantity, unit_price, currency):
+    def create_price_offer(self, sku_id, unit_price, currency, min_quantity, max_quantity=None):
         data = {'sku_id': sku_id,
                 'min_quantity': min_quantity,
-                'max_quantity': max_quantity,
                 'unit_price': unit_price,
                 'currency': currency}
+        if max_quantity is not None:
+            data['max_quantity'] = max_quantity
+            
         r = requests.post('{}/marketplace/price-offers'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
