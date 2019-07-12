@@ -418,3 +418,75 @@ class Client:
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
+    
+    
+    def get_all_retailers(self):
+        r = requests.get('{}/marketplace/retailers'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def get_retailer(self, retailer_id):
+        r = requests.get('{}/marketplace/retailers/{}'.format(self.api_url,
+                                                               retailer_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def create_retailer(self, name, url, country):
+        data = {'name': name,
+                'url': url,
+                'country': country}
+        r = requests.post('{}/marketplace/retailers'.format(self.api_url),
+                          headers=self.auth_header,
+                          json=data,
+                          proxies=self.proxies)
+        return r
+    
+    def get_all_skus(self):
+        r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def get_sku(self, sku_id):
+        r = requests.get('{}/marketplace/stock-keeping-units/{}'.format(self.api_url,
+                                                                        sku_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def create_sku(self, product_id, number_products, retailer_id):
+        data = {'product_id': product_id,
+                'number_products': number_products,
+                'retailer_id': retailer_id}
+        r = requests.post('{}/marketplace/stock-keeping-units'.format(self.api_url),
+                          headers=self.auth_header,
+                          json=data,
+                          proxies=self.proxies)
+        return r
+    
+    def get_all_price_offers(self):
+        r = requests.get('{}/marketplace/price-offers'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def get_price_offer(self, price_offer_id):
+        r = requests.get('{}/marketplace/price-offers/{}'.format(self.api_url,
+                                                                        price_offer_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def create_price_offer(self, sku_id, min_quantity, max_quantity, unit_price, currency):
+        data = {'sku_id': sku_id,
+                'min_quantity': min_quantity,
+                'max_quantity': max_quantity,
+                'unit_price': unit_price,
+                'currency': currency}
+        r = requests.post('{}/marketplace/price-offers'.format(self.api_url),
+                          headers=self.auth_header,
+                          json=data,
+                          proxies=self.proxies)
+        return r
