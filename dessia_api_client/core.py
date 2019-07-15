@@ -298,7 +298,7 @@ class Client:
                            'json': StringifyDictKeys(obj.Dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
-        print(data)
+#        print(data)
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
