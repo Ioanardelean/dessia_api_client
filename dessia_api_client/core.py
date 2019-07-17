@@ -31,13 +31,43 @@ def StringifyDictKeys(d):
 class AuthenticationError(Exception):
     pass
 
+class APIConnectionError(Exception):
+    pass
+
+
+def retry_n_times(func):
+   def func_wrapper(self, *args, **kwargs):
+       connection_error = True
+       n_tries = 1
+       while connection_error and (n_tries < self.max_retries):
+           try:
+               r = func(self, *args, **kwargs)            
+               if str(r.status_code)[0] == '2':
+                   connection_error = False
+                   break
+           except requests.ConnectionError: 
+               connection_error = True
+           
+           print('Connection with api down, retry {}/{} in {} seconds'.format(n_tries,
+                                                                              self.max_retries,
+                                                                              self.retry_interval))
+           n_tries += 1
+           time.sleep(self.retry_interval)
+       if connection_error:
+           raise APIConnectionError
+       else:
+           return r
+   return func_wrapper
+
 class Client:
     def __init__(self,
                  username=None,
                  password=None,
                  token=None,
                  proxies=None,
-                 api_url='https://api.software.dessia.tech'):
+                 api_url='https://api.software.dessia.tech',
+                 max_retries=10,
+                 retry_interval=2):
 
         self.username = username
         self.password = password
@@ -48,7 +78,8 @@ class Client:
         else:
             self.token_exp = 0.
         self.api_url = api_url
-
+        self.max_retries = max_retries
+        self.retry_interval = retry_interval
 
     def _get_auth_header(self):
         if self.token_exp < time.time():
@@ -113,7 +144,8 @@ class Client:
                           proxies=self.proxies)
         return r
 
-    def MyAccount(self):
+    @retry_n_times
+    def request_my_account(self):
         r = requests.get('{}/account/infos'.format(self.api_url),
                          headers=self.auth_header,
                          proxies=self.proxies)
@@ -123,9 +155,6 @@ class Client:
     def SubmitJob(self, obj, Id, method):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
                            'id': Id}, 'method': method}
-#        data = {'object': StringifyDictKeys(Object.Dict()),
-#                'method': method}
-        print(data)
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
@@ -154,7 +183,7 @@ class Client:
     def CreateTeam(self, name, membership=True):
         data = {'name':name,
                 'membership':membership}
-        r = requests.post('{}/teams/create'.format(self.api_url),
+        r = requests.post('{}/teams'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
@@ -164,7 +193,7 @@ class Client:
         data = {'name':name,
                 'owner_type': owner_type,
                 'owner_id': owner_id}
-        r = requests.post('{}/projects/create'.format(self.api_url),
+        r = requests.post('{}/projects'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
@@ -340,21 +369,32 @@ class Client:
                         proxies=self.proxies)
         return r
     
-    def get_all_manufacturers(self):
-        r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
+    @retry_n_times
+    def request_marketplace_stats(self):
+        r = requests.get('{}/marketplace/stats'.format(self.api_url),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
     
-    def get_manufacturer(self, manufacturer_id):
-        r = requests.get('{}/marketplace/manufacturers/{}'.format(self.api_url,
-                                                                  manufacturer_id),
+    @retry_n_times
+    def request_get_manufacturers(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
+        r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
-        return r
+        return r  
+    
+    def get_all_manufacturers(self):
+        return self._get_all_elements('get_manufacturers')
+    
+    def get_manufacturers(self, limit=20, offset=0):
+        r = self.request_get_manufacturers(limit, offset)
+        return r.json()
 
 
-    def create_manufacturer(self, name, url, country):
+
+    def request_create_manufacturer(self, name, url, country):
         data = {'name': name,
                 'url': url,
                 'country': country}
@@ -364,17 +404,21 @@ class Client:
         return r
 
     
-    def get_all_brands(self):
+    @retry_n_times
+    def request_get_brands(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
         r = requests.get('{}/marketplace/brands'.format(self.api_url),
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
-        return r
+        return r  
     
-    def get_brand(self, brand_id):
-        r = requests.get('{}/marketplace/brands/{}'.format(self.api_url,
-                                                           brand_id),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
+    def get_all_brands(self):
+        return self._get_all_elements('get_brands')
+    
+    def get_brands(self, limit=20, offset=0):
+        r = self.request_get_brands(limit, offset)
+        return r.json()
         return r
     
     def create_brand(self, name, url, country, manufacturer_id):
@@ -407,56 +451,87 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    def get_all_products(self):
+    
+    def _get_all_elements(self, method_name, query_size=100):
+        elements = []
+        offset = 0        
+        query_empty = False
+        while not query_empty:            
+            query_list = getattr(self, method_name)(limit=query_size, offset=offset)
+            query_empty = len(query_list) == 0
+            elements.extend(query_list)
+            offset += query_size
+        return elements
+    
+    @retry_n_times
+    def request_get_products(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
         r = requests.get('{}/marketplace/products'.format(self.api_url),
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
-        return r
+        return r  
     
-    def get_product(self, product_id):
+    
+    def get_all_products(self):
+        return self._get_all_elements('get_products')
+    
+    def get_products(self, limit=20, offset=0):
+        r = self.request_get_products(limit, offset)
+        return r.json()
+    
+    @retry_n_times
+    def request_get_product(self, product_id):
         r = requests.get('{}/marketplace/products/{}'.format(self.api_url, product_id),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
-    
+        
+    @retry_n_times
+    def request_get_retailers(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
+        r = requests.get('{}/marketplace/retailers'.format(self.api_url),
+                         params=parameters,
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r  
     
     def get_all_retailers(self):
-        r = requests.get('{}/marketplace/retailers'.format(self.api_url),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r
+        return self._get_all_elements('get_retailers')
     
-    def get_retailer(self, retailer_id):
-        r = requests.get('{}/marketplace/retailers/{}'.format(self.api_url,
-                                                               retailer_id),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r
+    def get_retailers(self, limit=20, offset=0):
+        r = self.request_get_retailers(limit, offset)
+        return r.json()
     
-    def create_retailer(self, name, url, country):
+    
+    def request_create_retailer(self, name, url, country):
         data = {'name': name,
                 'url': url,
                 'country': country}
-        r = requests.post('{}/marketplace/retailers'.format(self.api_url),
+        r = requests.post('{}/marketplace/retailer'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
         return r
     
-    def get_all_skus(self):
+    @retry_n_times
+    def request_get_skus(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
         r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
-        return r
+        return r 
     
-    def get_sku(self, sku_id):
-        r = requests.get('{}/marketplace/stock-keeping-units/{}'.format(self.api_url,
-                                                                        sku_id),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r
+    def get_all_skus(self):
+        return self._get_all_elements('get_skus')
     
-    def create_sku(self, product_id, number_products, retailer_id):
+    def get_skus(self, limit=20, offset=0):
+        r = self.request_get_skus(limit, offset)
+        return r.json()
+    
+    
+    def request_create_sku(self, product_id, number_products, retailer_id):
         data = {'product_id': product_id,
                 'number_products': number_products,
                 'retailer_id': retailer_id}
@@ -466,20 +541,24 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    def get_all_price_offers(self):
+    @retry_n_times
+    def request_get_price_offers(self, limit, offset):
+        parameters = {'limit': limit, 'offset': offset}
         r = requests.get('{}/marketplace/price-offers'.format(self.api_url),
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
-        return r
+        return r  
     
-    def get_price_offer(self, price_offer_id):
-        r = requests.get('{}/marketplace/price-offers/{}'.format(self.api_url,
-                                                                        price_offer_id),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r
+    def get_all_price_offers(self):
+        return self._get_all_elements('get_price_offers')
     
-    def create_price_offer(self, sku_id, unit_price, currency, min_quantity, max_quantity=None):
+    def get_price_offers(self, limit=20, offset=0):
+        r = self.request_get_price_offers(limit, offset)
+        return r.json()
+
+    
+    def request_create_price_offer(self, sku_id, unit_price, currency, min_quantity, max_quantity=None):
         data = {'sku_id': sku_id,
                 'min_quantity': min_quantity,
                 'unit_price': unit_price,
