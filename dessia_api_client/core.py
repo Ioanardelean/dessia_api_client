@@ -531,9 +531,10 @@ class Client:
         return r.json()
     
     
-    def request_create_sku(self, product_id, number_products, retailer_id):
+    def request_create_sku(self, product_id, number_products, url, retailer_id):
         data = {'product_id': product_id,
                 'number_products': number_products,
+                'url': url,
                 'retailer_id': retailer_id}
         r = requests.post('{}/marketplace/stock-keeping-units'.format(self.api_url),
                           headers=self.auth_header,
