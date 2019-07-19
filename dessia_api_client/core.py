@@ -508,7 +508,7 @@ class Client:
         data = {'name': name,
                 'url': url,
                 'country': country}
-        r = requests.post('{}/marketplace/retailer'.format(self.api_url),
+        r = requests.post('{}/marketplace/retailers'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
