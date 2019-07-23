@@ -452,7 +452,7 @@ class Client:
         return r
     
     
-    def _get_all_elements(self, method_name, query_size=100):
+    def _get_all_elements(self, method_name, query_size=500):
         elements = []
         offset = 0        
         query_empty = False
@@ -476,7 +476,7 @@ class Client:
     def get_all_products(self):
         return self._get_all_elements('get_products')
     
-    def get_products(self, limit=20, offset=0):
+    def get_products(self, limit=100, offset=0):
         r = self.request_get_products(limit, offset)
         return r.json()
     
@@ -508,7 +508,7 @@ class Client:
         data = {'name': name,
                 'url': url,
                 'country': country}
-        r = requests.post('{}/marketplace/retailer'.format(self.api_url),
+        r = requests.post('{}/marketplace/retailers'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
@@ -531,9 +531,10 @@ class Client:
         return r.json()
     
     
-    def request_create_sku(self, product_id, number_products, retailer_id):
+    def request_create_sku(self, product_id, number_products, url, retailer_id):
         data = {'product_id': product_id,
                 'number_products': number_products,
+                'url': url,
                 'retailer_id': retailer_id}
         r = requests.post('{}/marketplace/stock-keeping-units'.format(self.api_url),
                           headers=self.auth_header,
