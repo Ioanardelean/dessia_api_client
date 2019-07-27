@@ -529,6 +529,13 @@ class Client:
     def get_skus(self, limit=20, offset=0):
         r = self.request_get_skus(limit, offset)
         return r.json()
+
+    def request_update_sku_price_offers(self, sku_id, price_offers_update_dict):
+        r = requests.put('{}/marketplace/stock-keeping-units/{}/price-offers'.format(self.api_url, sku_id),
+                         headers=self.auth_header,
+                         json=price_offers_update_dict,
+                         proxies=self.proxies)
+        return r
     
     
     def request_create_sku(self, product_id, number_products, url, retailer_id):
