@@ -42,9 +42,9 @@ def retry_n_times(func):
        while connection_error and (n_tries < self.max_retries):
            try:
                r = func(self, *args, **kwargs)            
-               if str(r.status_code)[0] == '2':
-                   connection_error = False
-                   break
+#               if str(r.status_code)[0] == '2':
+               connection_error = False
+               break
            except requests.ConnectionError: 
                connection_error = True
            
@@ -89,6 +89,7 @@ class GreaterFilter(Filter):
 class GreaterOrEqualFilter(Filter):
     def __init__(self, attribute, value):
         Filter.__init__(self, attribute, '>=', value)
+
 
 
 class Client:
@@ -497,9 +498,12 @@ class Client:
         return elements
     
     @retry_n_times
-    def request_get_products(self, limit, offset, filters):
+    def request_get_products(self, limit, offset, filters=[], order=None):
         payload = {'limit': limit, 'offset': offset,
-                   'filters': [f.to_dict() for f in filters]}
+                   'filters': [f.to_dict() for f in filters],
+                   }
+        if order is not None:
+            payload['order'] = order
         
         r = requests.get('{}/marketplace/products'.format(self.api_url),
                          json=payload,
