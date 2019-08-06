@@ -65,30 +65,28 @@ class Filter:
         self.operator = operator
         self.value = value
         
-    def to_dict(self):
-        return {'attribute': self.attribute,
-                'operator': self.operator,
-                'value': self.value}
+    def to_param(self):
+        return {'{}[{}]'.format(self.attribute, self.operator): self.value}
         
 class EqualityFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '==', value)
+        Filter.__init__(self, attribute, 'eq', value)
 
 class LowerFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '<', value)
+        Filter.__init__(self, attribute, 'lt', value)
         
 class LowerOrEqualFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '<=', value)
+        Filter.__init__(self, attribute, 'lte', value)
 
 class GreaterFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '>', value)
+        Filter.__init__(self, attribute, 'gt', value)
         
 class GreaterOrEqualFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '>=', value)
+        Filter.__init__(self, attribute, 'gte', value)
 
 
 
@@ -499,14 +497,17 @@ class Client:
     
     @retry_n_times
     def request_get_products(self, limit, offset, filters=[], order=None):
-        payload = {'limit': limit, 'offset': offset,
-                   'filters': [f.to_dict() for f in filters],
+        parameters = {'limit': limit,
+                      'offset': offset,
                    }
+        for f in filters:
+            parameters.update(f.to_param())
+            
         if order is not None:
-            payload['order'] = order
+            parameters['order'] = order
         
         r = requests.get('{}/marketplace/products'.format(self.api_url),
-                         json=payload,
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r  
