@@ -42,9 +42,9 @@ def retry_n_times(func):
        while connection_error and (n_tries < self.max_retries):
            try:
                r = func(self, *args, **kwargs)            
-               if str(r.status_code)[0] == '2':
-                   connection_error = False
-                   break
+#               if str(r.status_code)[0] == '2':
+               connection_error = False
+               break
            except requests.ConnectionError: 
                connection_error = True
            
@@ -58,6 +58,39 @@ def retry_n_times(func):
        else:
            return r
    return func_wrapper
+
+class Filter:
+    def __init__(self, attribute, operator, value):
+        self.attribute = attribute
+        self.operator = operator
+        self.value = value
+        
+    def to_dict(self):
+        return {'attribute': self.attribute,
+                'operator': self.operator,
+                'value': self.value}
+        
+class EqualityFilter(Filter):
+    def __init__(self, attribute, value):
+        Filter.__init__(self, attribute, '==', value)
+
+class LowerFilter(Filter):
+    def __init__(self, attribute, value):
+        Filter.__init__(self, attribute, '<', value)
+        
+class LowerOrEqualFilter(Filter):
+    def __init__(self, attribute, value):
+        Filter.__init__(self, attribute, '<=', value)
+
+class GreaterFilter(Filter):
+    def __init__(self, attribute, value):
+        Filter.__init__(self, attribute, '>', value)
+        
+class GreaterOrEqualFilter(Filter):
+    def __init__(self, attribute, value):
+        Filter.__init__(self, attribute, '>=', value)
+
+
 
 class Client:
     def __init__(self,
@@ -457,17 +490,23 @@ class Client:
         offset = 0        
         query_empty = False
         while not query_empty:            
-            query_list = getattr(self, method_name)(limit=query_size, offset=offset)
+            query_list = getattr(self, method_name)(limit=query_size,
+                                                    offset=offset)
             query_empty = len(query_list) == 0
             elements.extend(query_list)
             offset += query_size
         return elements
     
     @retry_n_times
-    def request_get_products(self, limit, offset):
-        parameters = {'limit': limit, 'offset': offset}
+    def request_get_products(self, limit, offset, filters=[], order=None):
+        payload = {'limit': limit, 'offset': offset,
+                   'filters': [f.to_dict() for f in filters],
+                   }
+        if order is not None:
+            payload['order'] = order
+        
         r = requests.get('{}/marketplace/products'.format(self.api_url),
-                         params=parameters,
+                         json=payload,
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r  
@@ -476,13 +515,14 @@ class Client:
     def get_all_products(self):
         return self._get_all_elements('get_products')
     
-    def get_products(self, limit=100, offset=0):
-        r = self.request_get_products(limit, offset)
+    def get_products(self, limit=100, offset=0, filters=[]):
+        r = self.request_get_products(limit, offset, filters)
         return r.json()
     
     @retry_n_times
     def request_get_product(self, product_id):
-        r = requests.get('{}/marketplace/products/{}'.format(self.api_url, product_id),
+        r = requests.get('{}/marketplace/products/{}'.format(self.api_url,
+                                                             product_id),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
@@ -529,6 +569,13 @@ class Client:
     def get_skus(self, limit=20, offset=0):
         r = self.request_get_skus(limit, offset)
         return r.json()
+
+    def request_update_sku_price_offers(self, sku_id, new_price_offers):
+        r = requests.put('{}/marketplace/stock-keeping-units/{}/price-offers'.format(self.api_url, sku_id),
+                         headers=self.auth_header,
+                         json=new_price_offers,
+                         proxies=self.proxies)
+        return r
     
     
     def request_create_sku(self, product_id, number_products, url, retailer_id):
