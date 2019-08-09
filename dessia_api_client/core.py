@@ -183,9 +183,12 @@ class Client:
         return r
 
 
-    def SubmitJob(self, obj, Id, method):
+    def SubmitJob(self, obj, id_, method, arguments={}):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'id': Id}, 'method': method}
+                           'id': id_},
+                'method': method,
+                'arguments': arguments
+                }
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
@@ -367,7 +370,7 @@ class Client:
                           proxies=self.proxies)
         return r
 
-
+    @retry_n_times
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
@@ -450,7 +453,6 @@ class Client:
     def get_brands(self, limit=20, offset=0):
         r = self.request_get_brands(limit, offset)
         return r.json()
-        return r
     
     def create_brand(self, name, url, country, manufacturer_id):
         data = {'name': name,
@@ -489,7 +491,7 @@ class Client:
         query_empty = False
         while not query_empty:            
             query_list = getattr(self, method_name)(limit=query_size,
-                                                    offset=offset)
+                                                    offset=offset)['filtered_results']
             query_empty = len(query_list) == 0
             elements.extend(query_list)
             offset += query_size
