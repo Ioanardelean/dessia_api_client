@@ -135,7 +135,7 @@ class Client:
                 print(r.text)
                 raise AuthenticationError
 
-        auth_header = {'Authorization':'JWT {}'.format(self.token)}
+        auth_header = {'Authorization':'Bearer {}'.format(self.token)}
         return auth_header
 
     auth_header = property(_get_auth_header)
@@ -558,8 +558,11 @@ class Client:
         return r
     
     @retry_n_times
-    def request_get_skus(self, limit, offset):
+    def request_get_skus(self, limit, offset, filters=[]):
         parameters = {'limit': limit, 'offset': offset}
+        for f in filters:
+            parameters.update(f.to_param())
+            
         r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
                          params=parameters,
                          headers=self.auth_header,
@@ -569,8 +572,9 @@ class Client:
     def get_all_skus(self):
         return self._get_all_elements('get_skus')
     
-    def get_skus(self, limit=20, offset=0):
-        r = self.request_get_skus(limit, offset)
+    def get_skus(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_skus(limit, offset, filters)
+#        print(r.text)
         return r.json()
 
     def request_update_sku_price_offers(self, sku_id, new_price_offers):
