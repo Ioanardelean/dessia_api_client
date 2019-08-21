@@ -65,30 +65,28 @@ class Filter:
         self.operator = operator
         self.value = value
         
-    def to_dict(self):
-        return {'attribute': self.attribute,
-                'operator': self.operator,
-                'value': self.value}
+    def to_param(self):
+        return {'{}[{}]'.format(self.attribute, self.operator): self.value}
         
 class EqualityFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '==', value)
+        Filter.__init__(self, attribute, 'eq', value)
 
 class LowerFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '<', value)
+        Filter.__init__(self, attribute, 'lt', value)
         
 class LowerOrEqualFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '<=', value)
+        Filter.__init__(self, attribute, 'lte', value)
 
 class GreaterFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '>', value)
+        Filter.__init__(self, attribute, 'gt', value)
         
 class GreaterOrEqualFilter(Filter):
     def __init__(self, attribute, value):
-        Filter.__init__(self, attribute, '>=', value)
+        Filter.__init__(self, attribute, 'gte', value)
 
 
 
@@ -137,7 +135,7 @@ class Client:
                 print(r.text)
                 raise AuthenticationError
 
-        auth_header = {'Authorization':'JWT {}'.format(self.token)}
+        auth_header = {'Authorization':'Bearer {}'.format(self.token)}
         return auth_header
 
     auth_header = property(_get_auth_header)
@@ -185,9 +183,12 @@ class Client:
         return r
 
 
-    def SubmitJob(self, obj, Id, method):
+    def SubmitJob(self, obj, id_, method, arguments={}):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'id': Id}, 'method': method}
+                           'id': id_},
+                'method': method,
+                'arguments': arguments
+                }
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
@@ -369,7 +370,7 @@ class Client:
                           proxies=self.proxies)
         return r
 
-
+    @retry_n_times
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
@@ -452,7 +453,6 @@ class Client:
     def get_brands(self, limit=20, offset=0):
         r = self.request_get_brands(limit, offset)
         return r.json()
-        return r
     
     def create_brand(self, name, url, country, manufacturer_id):
         data = {'name': name,
@@ -491,7 +491,7 @@ class Client:
         query_empty = False
         while not query_empty:            
             query_list = getattr(self, method_name)(limit=query_size,
-                                                    offset=offset)
+                                                    offset=offset)['filtered_results']
             query_empty = len(query_list) == 0
             elements.extend(query_list)
             offset += query_size
@@ -499,14 +499,17 @@ class Client:
     
     @retry_n_times
     def request_get_products(self, limit, offset, filters=[], order=None):
-        payload = {'limit': limit, 'offset': offset,
-                   'filters': [f.to_dict() for f in filters],
+        parameters = {'limit': limit,
+                      'offset': offset,
                    }
+        for f in filters:
+            parameters.update(f.to_param())
+            
         if order is not None:
-            payload['order'] = order
+            parameters['order'] = order
         
         r = requests.get('{}/marketplace/products'.format(self.api_url),
-                         json=payload,
+                         params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r  
@@ -555,8 +558,11 @@ class Client:
         return r
     
     @retry_n_times
-    def request_get_skus(self, limit, offset):
+    def request_get_skus(self, limit, offset, filters=[]):
         parameters = {'limit': limit, 'offset': offset}
+        for f in filters:
+            parameters.update(f.to_param())
+            
         r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
                          params=parameters,
                          headers=self.auth_header,
@@ -566,8 +572,9 @@ class Client:
     def get_all_skus(self):
         return self._get_all_elements('get_skus')
     
-    def get_skus(self, limit=20, offset=0):
-        r = self.request_get_skus(limit, offset)
+    def get_skus(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_skus(limit, offset, filters)
+#        print(r.text)
         return r.json()
 
     def request_update_sku_price_offers(self, sku_id, new_price_offers):
