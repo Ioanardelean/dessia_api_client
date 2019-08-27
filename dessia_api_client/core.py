@@ -132,7 +132,7 @@ class Client:
                 self.token_exp = jwt.decode(self.token, verify=False)['exp']
                 print('Auth in {}s'.format(r.elapsed.total_seconds()))
             else:
-                print(r.text)
+                print('Authentication error: ', r.text)
                 raise AuthenticationError
 
         auth_header = {'Authorization':'Bearer {}'.format(self.token)}
@@ -355,13 +355,13 @@ class Client:
                          proxies=self.proxies)
         return r
 
-
+    @retry_n_times
     def CreateObject(self, obj, owner=None, embedded_subobjects=True, public=False):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
                            'json': StringifyDictKeys(obj.Dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
-        print(data)
+#        print(data)
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
@@ -454,7 +454,8 @@ class Client:
         r = self.request_get_brands(limit, offset)
         return r.json()
     
-    def create_brand(self, name, url, country, manufacturer_id):
+    @retry_n_times
+    def request_create_brand(self, name, url, country, manufacturer_id):
         data = {'name': name,
                 'url': url,
                 'country': country,
@@ -466,15 +467,19 @@ class Client:
         return r
     
     def create_product(self, name, url, brand_id, object_class, object_id,
-                       image_url=None, documentation_url=None):
+                       image_urls=None, documentation_url=None):
         data = {'name': name,
                 'url': url,
                 'brand_id': brand_id,
                 'object_class': object_class,
-                'object_id': object_id}
+                'object_id': object_id,
+                }
         
-        if image_url is not None:
-            data['image_url'] = image_url
+        if image_urls is not None:
+            data['image_urls'] = image_urls
+        else:
+            data['image_urls'] = []
+            
         if documentation_url is not None:
             data['documentation_url'] = documentation_url
         
@@ -484,6 +489,13 @@ class Client:
                           proxies=self.proxies)
         return r
     
+    def request_add_imageurl_to_product(self, product_id, image_url):
+        r = requests.post('{}/marketplace/products/{}/image_urls'.format(self.api_url,
+                                                                          product_id),
+                          headers=self.auth_header,
+                          json={'url': image_url},
+                          proxies=self.proxies)
+        return r
     
     def _get_all_elements(self, method_name, query_size=500):
         elements = []
@@ -585,14 +597,25 @@ class Client:
         return r
     
     
-    def request_create_sku(self, product_id, number_products, url, retailer_id):
+    def request_create_sku(self, product_id, number_products, url, retailer_id, image_urls=None):
         data = {'product_id': product_id,
                 'number_products': number_products,
                 'url': url,
                 'retailer_id': retailer_id}
+        if image_urls is not None:
+            data['image_urls'] = image_urls
+            
         r = requests.post('{}/marketplace/stock-keeping-units'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
+                          proxies=self.proxies)
+        return r
+    
+    def request_add_imageurl_to_sku(self, product_id, image_url):
+        r = requests.post('{}/marketplace/stock-keeping-units/{}/image_urls'.format(self.api_url,
+                                                                          product_id),
+                          headers=self.auth_header,
+                          json={'url': image_url},
                           proxies=self.proxies)
         return r
     
