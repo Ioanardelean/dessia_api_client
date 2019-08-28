@@ -88,6 +88,11 @@ class GreaterOrEqualFilter(Filter):
     def __init__(self, attribute, value):
         Filter.__init__(self, attribute, 'gte', value)
 
+class InFilter(Filter):
+    def __init__(self, attribute, values):
+        Filter.__init__(self, attribute, 'in', values)
+
+
 
 
 class Client:
