@@ -13,6 +13,9 @@ import time
 import getpass
 import importlib
 import requests
+import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
+#import matplotlib.dates as mdates
 
 def StringifyDictKeys(d):
     if type(d) == list or type(d) == tuple:
@@ -366,7 +369,6 @@ class Client:
                            'json': StringifyDictKeys(obj.Dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
-#        print(data)
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects/create'.format(self.api_url),
@@ -424,8 +426,8 @@ class Client:
                          proxies=self.proxies)
         return r  
     
-    def get_all_manufacturers(self):
-        return self._get_all_elements('get_manufacturers')
+#    def get_all_manufacturers(self):
+#        return self._get_all_elements('get_manufacturers')
     
     def get_manufacturers(self, limit=20, offset=0):
         r = self.request_get_manufacturers(limit, offset)
@@ -443,20 +445,20 @@ class Client:
         return r
 
     
-    @retry_n_times
-    def request_get_brands(self, limit, offset):
-        parameters = {'limit': limit, 'offset': offset}
-        r = requests.get('{}/marketplace/brands'.format(self.api_url),
-                         params=parameters,
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r  
+#    @retry_n_times
+#    def request_get_brands(self, limit, offset):
+#        parameters = {'limit': limit, 'offset': offset}
+#        r = requests.get('{}/marketplace/brands'.format(self.api_url),
+#                         params=parameters,
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r  
     
-    def get_all_brands(self):
-        return self._get_all_elements('get_brands')
+#    def get_brands(self):
+#        return self._get_all_elements('get_brands')
     
-    def get_brands(self, limit=20, offset=0):
-        r = self.request_get_brands(limit, offset)
+    def get_brands(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_elements('brand', limit, offset, filters)
         return r.json()
     
     @retry_n_times
@@ -502,65 +504,76 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    def _get_all_elements(self, method_name, query_size=500):
+    def get_all_elements(self, element_name, filters=[], query_size=500):
         elements = []
         offset = 0        
         query_empty = False
-        while not query_empty:            
-            query_list = getattr(self, method_name)(limit=query_size,
-                                                    offset=offset)['filtered_results']
+        while not query_empty: 
+            query_list = getattr(self, 'get_{}s'.format(element_name))(limit=query_size,
+                                                                       offset=offset,
+                                                                       filters=filters)['filtered_results']
             query_empty = len(query_list) == 0
             elements.extend(query_list)
             offset += query_size
         return elements
     
     @retry_n_times
-    def request_get_products(self, limit, offset, filters=[], order=None):
+    def request_get_element(self, element_name, element_id):
+        r = requests.get('{}/marketplace/{}s/{}'.format(self.api_url, element_name, element_id),
+                 headers=self.auth_header,
+                 proxies=self.proxies)
+        return r
+    
+    def get_element(self, element_name, element_id):
+        return self.request_get_element(element_name, element_id).json()
+    
+    @retry_n_times
+    def request_get_elements(self,element_name, limit, offset, filters=[], order=None):
         parameters = {'limit': limit,
                       'offset': offset,
-                   }
+                      }
         for f in filters:
             parameters.update(f.to_param())
             
         if order is not None:
             parameters['order'] = order
         
-        r = requests.get('{}/marketplace/products'.format(self.api_url),
+        r = requests.get('{}/marketplace/{}s'.format(self.api_url, element_name),
                          params=parameters,
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r  
     
     
-    def get_all_products(self):
-        return self._get_all_elements('get_products')
+#    def get_all_products(self):
+#        return self._get_all_elements('get_products')
     
     def get_products(self, limit=100, offset=0, filters=[]):
-        r = self.request_get_products(limit, offset, filters)
+        r = self.request_get_elements('product', limit, offset, filters)
         return r.json()
     
-    @retry_n_times
-    def request_get_product(self, product_id):
-        r = requests.get('{}/marketplace/products/{}'.format(self.api_url,
-                                                             product_id),
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r
+#    @retry_n_times
+#    def request_get_product(self, product_id):
+#        r = requests.get('{}/marketplace/products/{}'.format(self.api_url,
+#                                                             product_id),
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r
         
-    @retry_n_times
-    def request_get_retailers(self, limit, offset):
-        parameters = {'limit': limit, 'offset': offset}
-        r = requests.get('{}/marketplace/retailers'.format(self.api_url),
-                         params=parameters,
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r  
+#    @retry_n_times
+#    def request_get_retailers(self, limit, offset):
+#        parameters = {'limit': limit, 'offset': offset}
+#        r = requests.get('{}/marketplace/retailers'.format(self.api_url),
+#                         params=parameters,
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r  
     
-    def get_all_retailers(self):
-        return self._get_all_elements('get_retailers')
+#    def get_all_retailers(self):
+#        return self._get_all_elements('get_retailers')
     
-    def get_retailers(self, limit=20, offset=0):
-        r = self.request_get_retailers(limit, offset)
+    def get_retailers(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_elements('retailer', limit, offset, filters)
         return r.json()
     
     
@@ -574,23 +587,23 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    @retry_n_times
-    def request_get_skus(self, limit, offset, filters=[]):
-        parameters = {'limit': limit, 'offset': offset}
-        for f in filters:
-            parameters.update(f.to_param())
-            
-        r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
-                         params=parameters,
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r 
+#    @retry_n_times
+#    def request_get_skus(self, limit, offset, filters=[]):
+#        parameters = {'limit': limit, 'offset': offset}
+#        for f in filters:
+#            parameters.update(f.to_param())
+#            
+#        r = requests.get('{}/marketplace/stock-keeping-units'.format(self.api_url),
+#                         params=parameters,
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r 
     
-    def get_all_skus(self):
-        return self._get_all_elements('get_skus')
+#    def get_all_skus(self):
+#        return self._get_all_elements('get_skus')
     
     def get_skus(self, limit=20, offset=0, filters=[]):
-        r = self.request_get_skus(limit, offset, filters)
+        r = self.request_get_elements('stock-keeping-unit', limit, offset, filters)
 #        print(r.text)
         return r.json()
 
@@ -624,20 +637,20 @@ class Client:
                           proxies=self.proxies)
         return r
     
-    @retry_n_times
-    def request_get_price_offers(self, limit, offset):
-        parameters = {'limit': limit, 'offset': offset}
-        r = requests.get('{}/marketplace/price-offers'.format(self.api_url),
-                         params=parameters,
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r  
+#    @retry_n_times
+#    def request_get_price_offers(self, limit, offset):
+#        parameters = {'limit': limit, 'offset': offset}
+#        r = requests.get('{}/marketplace/price-offers'.format(self.api_url),
+#                         params=parameters,
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r  
     
-    def get_all_price_offers(self):
-        return self._get_all_elements('get_price_offers')
+#    def get_all_price_offers(self):
+#        return self._get_all_elements('get_price_offers')
     
-    def get_price_offers(self, limit=20, offset=0):
-        r = self.request_get_price_offers(limit, offset)
+    def get_price_offers(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_elements('price-offer', limit, offset, filters)
         return r.json()
 
     
@@ -654,3 +667,53 @@ class Client:
                           json=data,
                           proxies=self.proxies)
         return r
+    
+    def plot_product_price_offers(self, product_id):
+        current_time = int(time.time())
+        filters = [EqualityFilter('sku.product.id', product_id)]
+        price_offers = self.get_all_elements('price_offer', filters)
+        fig, ax = plt.subplots()
+        
+        sku_ids = []
+        sku_labels = {}
+#        sku_id_to_retailer_id = {}
+        for price_offer in price_offers:
+            sku_id = price_offer['stock_keeping_unit']['id']
+            if not sku_id in sku_ids:
+                sku_ids.append(sku_id)
+        
+            if not sku_id in sku_labels:
+                sku_labels[sku_id] = '{} SKU {}'.format(self.get_element('stock-keeping-unit', sku_id)['retailer']['name'],
+                                               sku_id)
+                
+      
+        cmap = get_cmap('jet')
+        sku_colors = {sku_id: cmap(ii/(len(sku_ids))) for ii, sku_id in enumerate(sku_ids)}
+        labelled_sku = []
+        handles = []
+        labels = []
+        for price_offer in price_offers:
+            sku_id = price_offer['stock_keeping_unit']['id']
+            if price_offer['validity_end'] is None:
+                validity_end = current_time
+            else:
+                validity_end = price_offer['validity_end']
+            
+            handle, = ax.plot([price_offer['validity_start'], validity_end],
+                    [price_offer['unit_price']]*2,
+                    color=sku_colors[sku_id],
+                    marker='o'
+#                        label=sku_labels[sku_id]
+                    )
+            ax.text(0.5*(validity_end+price_offer['validity_start']),
+                    price_offer['unit_price'],
+                    '{}-{}'.format(price_offer['min_quantity'], price_offer['max_quantity'])
+                    )
+            if not sku_id in labelled_sku:
+                handles.append(handle)
+                labels.append(sku_labels[sku_id])
+                labelled_sku.append(sku_id)
+        fig.legend(handles, labels)
+
+
+        ax.grid(True)
