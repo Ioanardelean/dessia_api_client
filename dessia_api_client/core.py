@@ -338,7 +338,7 @@ class Client:
         return r
 
     def GetObjectPlotData(self, object_class, object_id):
-        r = requests.get('{}/objects/{}/{}/plot_data'.format(self.api_url, object_class, object_id),
+        r = requests.get('{}/objects/{}/{}/plot-data'.format(self.api_url, object_class, object_id),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
@@ -358,7 +358,7 @@ class Client:
 
     def CreateObject(self, obj, owner=None, embedded_subobjects=True, public=False):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'json': StringifyDictKeys(obj.Dict())},
+                           'json': StringifyDictKeys(obj.to_dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
 #        print(data)
@@ -382,6 +382,7 @@ class Client:
                         headers=self.auth_header,
                         json=data,
                         proxies=self.proxies)
+        print(r.status_code)
         return r
 
     def UpdateObject(self, object_class, object_id, update_dict):
