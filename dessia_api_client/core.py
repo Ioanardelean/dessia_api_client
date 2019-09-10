@@ -342,7 +342,7 @@ class Client:
             class_name = object_class.split('.')[-1]
             module = importlib.import_module(module_name)
             object_class = getattr(module, class_name)
-            return object_class.DictToObject(r.json()['object_dict'])
+            return object_class.dict_to_object(r.json()['object_dict'])
         return r
 
     def GetObjectPlotData(self, object_class, object_id):
