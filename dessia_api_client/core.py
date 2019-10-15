@@ -15,6 +15,7 @@ import importlib
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
+import dessia_common as dc
 #import matplotlib.dates as mdates
 
 def StringifyDictKeys(d):
@@ -191,12 +192,11 @@ class Client:
         return r
 
 
-    def SubmitJob(self, obj, id_, method, arguments={}):
-        data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'id': id_},
+    def SubmitJob(self, object_class, id_, method, arguments={}):
+        serialized_arguments = dc.serialize_dict(arguments)
+        data = {'object': {'object_class': object_class, 'id': id_},
                 'method': method,
-                'arguments': arguments
-                }
+                'method_dict': serialized_arguments}
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
@@ -381,7 +381,7 @@ class Client:
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
-                           'json': StringifyDictKeys(new_object.Dict())},
+                           'json': StringifyDictKeys(new_object.to_dict())},
                 'embedded_subobjects' : embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
@@ -718,3 +718,9 @@ class Client:
 
 
         ax.grid(True)
+    
+    def method_attributes(self, object_class, object_id):
+        r = requests.get('{}/objects/{}/{}/method_attributes'.format(self.api_url, object_class, object_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
