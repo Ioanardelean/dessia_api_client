@@ -149,16 +149,17 @@ class Client:
 
     auth_header = property(_get_auth_header)
 
-    def CreateUser(self, email, password, first_name, last_name, standalone_user=True):
+    def CreateUser(self, email, password, first_name, last_name, is_organization_user=False):
         data = {'email':email,
                 'password':password,
                 'first_name':first_name,
-                'last_name':last_name}
+                'last_name':last_name,
+                'is_organization_user': is_organization_user}
 
-        if standalone_user:
-            data['user_type'] = 'StandAloneUser'
-        else:
-            data['user_type'] = 'OrganizationUser'
+#        if standalone_user:
+#            data['user_type'] = 'StandAloneUser'
+#        else:
+#            data['user_type'] = 'OrganizationUser'
 
         r = requests.post('{}/users/create'.format(self.api_url),
                           json=data,
