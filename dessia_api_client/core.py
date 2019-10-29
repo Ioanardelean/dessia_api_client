@@ -15,6 +15,7 @@ import importlib
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
+import dessia_common as dc
 #import matplotlib.dates as mdates
 
 def StringifyDictKeys(d):
@@ -148,16 +149,17 @@ class Client:
 
     auth_header = property(_get_auth_header)
 
-    def CreateUser(self, email, password, first_name, last_name, standalone_user=True):
+    def CreateUser(self, email, password, first_name, last_name, is_organization_user=False):
         data = {'email':email,
                 'password':password,
                 'first_name':first_name,
-                'last_name':last_name}
+                'last_name':last_name,
+                'is_organization_user': is_organization_user}
 
-        if standalone_user:
-            data['user_type'] = 'StandAloneUser'
-        else:
-            data['user_type'] = 'OrganizationUser'
+#        if standalone_user:
+#            data['user_type'] = 'StandAloneUser'
+#        else:
+#            data['user_type'] = 'OrganizationUser'
 
         r = requests.post('{}/users/create'.format(self.api_url),
                           json=data,
@@ -191,12 +193,11 @@ class Client:
         return r
 
 
-    def SubmitJob(self, obj, id_, method, arguments={}):
-        data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'id': id_},
+    def SubmitJob(self, object_class, id_, method, arguments={}):
+        serialized_arguments = dc.serialize_dict(arguments)
+        data = {'object': {'object_class': object_class, 'id': id_},
                 'method': method,
-                'arguments': arguments
-                }
+                'method_dict': serialized_arguments}
         r = requests.post('{}/jobs/submit'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
@@ -342,11 +343,11 @@ class Client:
             class_name = object_class.split('.')[-1]
             module = importlib.import_module(module_name)
             object_class = getattr(module, class_name)
-            return object_class.DictToObject(r.json()['object_dict'])
+            return object_class.dict_to_object(r.json()['object_dict'])
         return r
 
     def GetObjectPlotData(self, object_class, object_id):
-        r = requests.get('{}/objects/{}/{}/plot_data'.format(self.api_url, object_class, object_id),
+        r = requests.get('{}/objects/{}/{}/plot-data'.format(self.api_url, object_class, object_id),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
@@ -366,7 +367,7 @@ class Client:
     @retry_n_times
     def CreateObject(self, obj, owner=None, embedded_subobjects=True, public=False):
         data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'json': StringifyDictKeys(obj.Dict())},
+                           'json': StringifyDictKeys(obj.to_dict())},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
         if owner is not None:
@@ -381,7 +382,7 @@ class Client:
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects = False, owner=None):
         data = {'object': {'class': object_class,
-                           'json': StringifyDictKeys(new_object.Dict())},
+                           'json': StringifyDictKeys(new_object.to_dict())},
                 'embedded_subobjects' : embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
@@ -389,6 +390,7 @@ class Client:
                         headers=self.auth_header,
                         json=data,
                         proxies=self.proxies)
+        print(r.status_code)
         return r
 
     def UpdateObject(self, object_class, object_id, update_dict):
@@ -410,6 +412,12 @@ class Client:
                         proxies=self.proxies)
         return r
     
+    def method_attributes(self, object_class, object_id):
+        r = requests.get('{}/objects/{}/{}/method_attributes'.format(self.api_url, object_class, object_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
     @retry_n_times
     def request_marketplace_stats(self):
         r = requests.get('{}/marketplace/stats'.format(self.api_url),
@@ -417,20 +425,20 @@ class Client:
                          proxies=self.proxies)
         return r
     
-    @retry_n_times
-    def request_get_manufacturers(self, limit, offset):
-        parameters = {'limit': limit, 'offset': offset}
-        r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
-                         params=parameters,
-                         headers=self.auth_header,
-                         proxies=self.proxies)
-        return r  
+#    @retry_n_times
+#    def request_get_manufacturers(self, limit, offset):
+#        parameters = {'limit': limit, 'offset': offset}
+#        r = requests.get('{}/marketplace/manufacturers'.format(self.api_url),
+#                         params=parameters,
+#                         headers=self.auth_header,
+#                         proxies=self.proxies)
+#        return r  
     
 #    def get_all_manufacturers(self):
 #        return self._get_all_elements('get_manufacturers')
     
-    def get_manufacturers(self, limit=20, offset=0):
-        r = self.request_get_manufacturers(limit, offset)
+    def get_manufacturers(self, limit=20, offset=0, filters=[]):
+        r = self.request_get_elements('manufacturer', limit, offset, filters=filters)
         return r.json()
 
 
@@ -672,7 +680,7 @@ class Client:
         current_time = int(time.time())
         filters = [EqualityFilter('sku.product.id', product_id)]
         price_offers = self.get_all_elements('price_offer', filters)
-        fig, ax = plt.subplots()
+        fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
         
         sku_ids = []
         sku_labels = {}
@@ -699,13 +707,13 @@ class Client:
             else:
                 validity_end = price_offer['validity_end']
             
-            handle, = ax.plot([price_offer['validity_start'], validity_end],
+            handle, = ax1.plot([price_offer['validity_start'], validity_end],
                     [price_offer['unit_price']]*2,
                     color=sku_colors[sku_id],
                     marker='o'
 #                        label=sku_labels[sku_id]
                     )
-            ax.text(0.5*(validity_end+price_offer['validity_start']),
+            ax1.text(0.5*(validity_end+price_offer['validity_start']),
                     price_offer['unit_price'],
                     '{}-{}'.format(price_offer['min_quantity'], price_offer['max_quantity'])
                     )
@@ -713,7 +721,52 @@ class Client:
                 handles.append(handle)
                 labels.append(sku_labels[sku_id])
                 labelled_sku.append(sku_id)
-        fig.legend(handles, labels)
-
+        ax1.legend(handles, labels)
+        ax1.set_title('Price offers')
 
         ax.grid(True)
+        
+        product = self.get_element('product', product_id)
+        price_by_qty = {}
+        disappered_qty = set()
+        for timestamp, price_breaks in product['prices_history']:
+#            print(timestamp)
+            seen_qty_t = set()
+            for quantity, unit_price in price_breaks:
+                seen_qty_t.add(quantity)
+#                print(quantity, unit_price)
+                if quantity in disappered_qty:
+                    disappered_qty.remove(quantity)
+                if quantity in price_by_qty:
+                    price_by_qty[quantity][0].append(timestamp)
+                    price_by_qty[quantity][1].append(unit_price)
+                else:
+                    price_by_qty[quantity] = [[timestamp], [unit_price]]
+            
+            for quantity in price_by_qty.keys():
+                if not quantity in seen_qty_t:
+                    disappered_qty.add(quantity)
+
+            for quantity in disappered_qty:
+#                print('qtd', quantity)
+                price_by_qty[quantity][0].append(timestamp)                    
+                price_by_qty[quantity][1].append(None)                    
+
+        for quantity, (x,y) in price_by_qty.items():
+            if y[-1] is not None:
+                x.append(current_time)
+                y.append(y[-1])
+
+        nqty = len(price_by_qty)
+        for iq, (quantity, (x,y)) in enumerate(price_by_qty.items()):
+#            print(x,y)
+            color = cmap(iq/nqty)
+            ax2.step(x, y, where='post', label='For {}'.format(quantity), color=color)
+            ax2.plot(x, y, 'o', color=color)
+            
+        ax2.set_title('Global price history')
+        
+        ax2.legend()
+                    
+        ax1.grid(True)
+        ax2.grid(True)
