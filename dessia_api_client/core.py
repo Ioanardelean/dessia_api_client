@@ -105,7 +105,7 @@ class Client:
                  password=None,
                  token=None,
                  proxies=None,
-                 api_url='https://api.software.dessia.tech',
+                 api_url='https://api.platform.dessia.tech',
                  max_retries=10,
                  retry_interval=2):
 
