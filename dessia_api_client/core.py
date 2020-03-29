@@ -810,3 +810,10 @@ class AdminClient(Client):
                          proxies=self.proxies)
         return r
         
+    
+    def refresh_models(self):
+        r = requests.get('{}/admin/models/refresh'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+        
