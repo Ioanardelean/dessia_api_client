@@ -816,4 +816,10 @@ class AdminClient(Client):
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
+    
+    def error_objects(self):
+        r = requests.get('{}/objects/errors'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
         
