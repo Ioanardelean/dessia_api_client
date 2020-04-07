@@ -744,7 +744,7 @@ class Client:
         ax1.legend(handles, labels)
         ax1.set_title('Price offers')
 
-        ax.grid(True)
+        ax1.grid(True)
         
         product = self.get_element('product', product_id)
         price_by_qty = {}
