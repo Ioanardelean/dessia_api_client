@@ -426,11 +426,11 @@ class Client:
                             proxies=self.proxies)
         return r
 
-    def DeleteAllSTL(self):
-        r = requests.delete('{}/objects/stl/delete_all'.format(self.api_url),
-                        headers=self.auth_header,
-                        proxies=self.proxies)
-        return r
+    # def DeleteAllSTL(self):
+    #     r = requests.delete('{}/objects/stl/delete_all'.format(self.api_url),
+    #                     headers=self.auth_header,
+    #                     proxies=self.proxies)
+    #     return r
     
     def method_attributes(self, object_class, object_id):
         r = requests.get('{}/objects/{}/{}/method_attributes'.format(self.api_url, object_class, object_id),
@@ -823,3 +823,25 @@ class AdminClient(Client):
                          proxies=self.proxies)
         return r
         
+    def inspect_objects(self, max_duration=60.):
+        r = requests.get('{}/objects/inspect'.format(self.api_url),
+                         params={'max_duration': max_duration},
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+    
+    def logs(self, limit=50, offset=0):
+        r = requests.get('{}/admin/logs'.format(self.api_url),
+                     params={'limit': limit,
+                             'offset': offset},
+                     headers=self.auth_header,
+                     proxies=self.proxies)
+        return r
+    
+    def auth_logs(self, limit=50, offset=0):
+        r = requests.get('{}/admin/logs/auth'.format(self.api_url),
+                 params={'limit': limit,
+                         'offset': offset},
+                 headers=self.auth_header,
+                 proxies=self.proxies)
+        return r
