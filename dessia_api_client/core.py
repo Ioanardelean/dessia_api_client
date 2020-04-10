@@ -845,3 +845,12 @@ class AdminClient(Client):
                  headers=self.auth_header,
                  proxies=self.proxies)
         return r
+    
+    def hash_warnings(self, limit=50, offset=0):
+        r = requests.get('{}/admin/objects/hash-warnings'.format(self.api_url),
+                 headers=self.auth_header,
+                 proxies=self.proxies)
+        return r
+    
+    
+    
