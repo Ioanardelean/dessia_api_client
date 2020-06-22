@@ -781,25 +781,30 @@ class AdminClient(Client):
     
     def logs(self, limit=50, offset=0):
         r = requests.get('{}/admin/logs'.format(self.api_url),
-                     params={'limit': limit,
-                             'offset': offset},
-                     headers=self.auth_header,
-                     proxies=self.proxies)
+                         params={'limit': limit,
+                                 'offset': offset},
+                         headers=self.auth_header,
+                         proxies=self.proxies)
         return r
     
     def auth_logs(self, limit=50, offset=0):
         r = requests.get('{}/admin/logs/auth'.format(self.api_url),
-                 params={'limit': limit,
-                         'offset': offset},
-                 headers=self.auth_header,
-                 proxies=self.proxies)
+                         params={'limit': limit,
+                                 'offset': offset},
+                         headers=self.auth_header,
+                         proxies=self.proxies)
         return r
     
     def hash_warnings(self, limit=50, offset=0):
         r = requests.get('{}/admin/objects/hash-warnings'.format(self.api_url),
-                 headers=self.auth_header,
-                 proxies=self.proxies)
+                         headers=self.auth_header,
+                         proxies=self.proxies)
         return r
-    
+
+    def object_stats(self):
+        r = requests.get('{}/objects/stats'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r    
     
     
