@@ -836,12 +836,22 @@ class AdminClient(Client):
                                proxies=self.proxies)
 
     
-    def upload_distribution(self, distribution_filepath):
+    def upload_file_distribution(self, distribution_filepath):
         files = {'file': open(distribution_filepath, 'rb')}
-        return requests.post('{}/application-distributions'.format(self.api_url),
+        return requests.post('{}/file-application-distributions'.format(self.api_url),
                              headers=self.auth_header,
                              proxies=self.proxies,
                              files=files)
+
+    def create_git_distribution(self, http_url, username, token):
+        data = {'http_url': http_url,
+                'username': username,
+                'token': token}
+        return requests.post('{}/git-application-distributions'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies,
+                             json=data)
+
     
     def delete_distribution(self, distribution_id:int):
         return requests.delete('{}/application-distributions/{}'.format(self.api_url, distribution_id),
