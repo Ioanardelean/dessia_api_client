@@ -312,6 +312,15 @@ class Client:
                          proxies=self.proxies)
         return r
 
+
+    def object_display(self, object_class, object_id):
+        r = requests.get('{}/objects/{}/{}/object_display'.format(self.api_url,
+                                                                  object_class,
+                                                                  object_id),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+
     @retry_n_times
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True, public=False):
