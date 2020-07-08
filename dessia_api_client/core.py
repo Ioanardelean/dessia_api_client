@@ -348,7 +348,7 @@ class Client:
                 'public': public}
         if owner is not None:
             data['owner'] = owner
-        r = requests.post('{}/objects/create'.format(self.api_url),
+        r = requests.post('{}/objects'.format(self.api_url),
                           headers=self.auth_header,
                           json=data,
                           proxies=self.proxies)
