@@ -14,7 +14,10 @@ import importlib
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
-import dessia_common as dc
+try:
+    import dessia_common as dc
+except ModuleNotFoundError:
+    print('Dessia common module could not be found\n it is required for object handling')
 #import matplotlib.dates as mdates
 
 def StringifyDictKeys(d):
