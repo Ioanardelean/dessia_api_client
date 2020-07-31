@@ -898,3 +898,13 @@ class AdminClient(Client):
                              headers=self.auth_header,
                              proxies=self.proxies,
                              json=data)
+    
+    
+    def add_computation_usage(self, owner:str, time:float):
+        data = {'owner': owner,
+                'time': time}
+        
+        return requests.post('{}/admin/computation-usage/{}'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies,
+                             json=data)
