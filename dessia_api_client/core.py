@@ -89,7 +89,7 @@ class LowerOrEqualFilter(Filter):
 class GreaterFilter(Filter):
     def __init__(self, attribute, value):
         Filter.__init__(self, attribute, 'gt', value)
-        
+
 class GreaterOrEqualFilter(Filter):
     def __init__(self, attribute, value):
         Filter.__init__(self, attribute, 'gte', value)
@@ -381,7 +381,7 @@ class Client:
         return r
 
     def delete_object(self, object_class, object_id):
-        r = requests.delete('{}/objects/{}/{}/delete'.format(self.api_url, object_class, object_id),
+        r = requests.delete('{}/objects/{}/{}'.format(self.api_url, object_class, object_id),
                             headers=self.auth_header,
                             proxies=self.proxies)
         return r
