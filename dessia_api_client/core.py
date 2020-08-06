@@ -768,7 +768,14 @@ class AdminClient(Client):
         Client.__init__(self, username=username, password=password,
                         token=token, proxies=proxies, api_url=api_url,
                         max_retries=max_retries, retry_interval=retry_interval)
+
+    def status(self):
+        r = requests.get('{}/admin/status'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
         
+    
     def import_errors(self):
         r = requests.get('{}/admin/import-errors'.format(self.api_url),
                          headers=self.auth_header,
@@ -869,3 +876,35 @@ class AdminClient(Client):
         return requests.delete('{}/application-distributions/{}'.format(self.api_url, distribution_id),
                                headers=self.auth_header,
                                proxies=self.proxies)
+    
+    def update_user(self, user_id:int, 
+                    first_name:str=None,
+                    last_name:str=None,
+                    active:bool=None,
+                    admin:bool=None):
+        data = {}
+        for attr_name, attr_value in [('first_name', first_name),
+                                      ('last_name', last_name),
+                                      ('active', active),
+                                      ('admin', admin)]:
+            if attr_value:
+                data['attr_name'] = attr_value
+                
+        if not data:
+            print('Empty data, no need to fire a request')
+            return None
+        
+        return requests.post('{}/admin/users/{}'.format(self.api_url, user_id),
+                             headers=self.auth_header,
+                             proxies=self.proxies,
+                             json=data)
+    
+    
+    def add_computation_usage(self, owner:str, time:float):
+        data = {'owner': owner,
+                'time': time}
+        
+        return requests.post('{}/admin/computation-usage/{}'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies,
+                             json=data)
