@@ -19,6 +19,8 @@ try:
 except ModuleNotFoundError:
     print('Dessia common module could not be found\n it is required for object handling')
 #import matplotlib.dates as mdates
+import string
+import random
 
 def StringifyDictKeys(d):
     if type(d) == list or type(d) == tuple:
@@ -385,6 +387,27 @@ class Client:
                             headers=self.auth_header,
                             proxies=self.proxies)
         return r
+
+    def delete_all_objects(self):
+        classes = self.GetObjectClasses().json()
+        objects = []
+        for classname in classes:
+            class_objects = self.GetAllClassObjects(classname).json()
+            if class_objects:
+                objects.extend(class_objects)
+        validator = ''.join(random.choices(string.ascii_uppercase, k=6))
+        print('This will delete all {} objects'.format(len(objects)))
+        print('Confirm by typing in following code : {}'.format(validator))
+        print('Let empty to abort.')
+        confirm = input()
+        if confirm == validator:
+            for object_ in objects:
+                self.delete_object(object_['object_class'], object_['id'])
+            print('All {} objects successfully deleted'.format(len(objects)))
+        elif not confirm:
+            print('Deletion aborted')
+        else:
+            print('Input did not match validator. Deletion aborted')
 
     # def DeleteAllSTL(self):
     #     r = requests.delete('{}/objects/stl/delete_all'.format(self.api_url),
