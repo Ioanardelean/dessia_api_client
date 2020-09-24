@@ -778,6 +778,18 @@ class Client:
         return requests.get('{}/applications'.format(self.api_url),
                              headers=self.auth_header,
                              proxies=self.proxies)
+
+    def get_workspace(self, workspace_id):
+        return requests.get('{}/workspaces/{}'.format(self.api_url,
+                                                      workspace_id),
+                             headers=self.auth_header,
+                             proxies=self.proxies)
+
+    def my_network(self):
+        return requests.get('{}/account/network'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies)
+
         
 class AdminClient(Client):
     def __init__(self,
