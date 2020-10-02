@@ -781,6 +781,10 @@ class Client:
                              headers=self.auth_header,
                              proxies=self.proxies)
 
+    def my_network(self):
+        return requests.get('{}/account/network'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies)
 
 class AdminClient(Client):
     def __init__(self, username=None, password=None, token=None, proxies=None,
