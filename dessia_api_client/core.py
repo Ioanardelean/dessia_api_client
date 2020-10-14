@@ -330,10 +330,14 @@ class Client:
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True, public=False):
         
-        data = {'object': {'class': '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__),
-                           'json': StringifyDictKeys(obj.to_dict())},
-                'embedded_subobjects': embedded_subobjects,
-                'public': public}
+        data = {
+            'object': {
+                'object_class': '{}.{}'.format(obj.__class__.__module__,
+                                        obj.__class__.__name__),
+                'json': StringifyDictKeys(obj.to_dict())
+            },
+            'embedded_subobjects': embedded_subobjects,
+            'public': public}
         if owner is not None:
             data['owner'] = owner
         r = requests.post('{}/objects'.format(self.api_url),
@@ -342,12 +346,11 @@ class Client:
                           proxies=self.proxies)
         return r
 
-
     @retry_n_times
     def create_object_from_object_dict(self, object_dict, owner=None,
                                        embedded_subobjects=True, public=False):
         
-        data = {'object': {'class': object_dict['object_class'],
+        data = {'object': {'object_class': object_dict['object_class'],
                            'json': StringifyDictKeys(object_dict)},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
@@ -359,11 +362,10 @@ class Client:
                           proxies=self.proxies)
         return r
 
-
     @retry_n_times
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects = False, owner=None):
-        data = {'object': {'class': object_class,
+        data = {'object': {'object_class': object_class,
                            'json': StringifyDictKeys(new_object.to_dict())},
                 'embedded_subobjects' : embedded_subobjects}
         if owner is not None:
@@ -779,27 +781,15 @@ class Client:
                              headers=self.auth_header,
                              proxies=self.proxies)
 
-    def get_workspace(self, workspace_id):
-        return requests.get('{}/workspaces/{}'.format(self.api_url,
-                                                      workspace_id),
-                             headers=self.auth_header,
-                             proxies=self.proxies)
-
     def my_network(self):
         return requests.get('{}/account/network'.format(self.api_url),
                              headers=self.auth_header,
                              proxies=self.proxies)
 
-        
 class AdminClient(Client):
-    def __init__(self,
-                  username=None,
-                  password=None,
-                  token=None,
-                  proxies=None,
+    def __init__(self, username=None, password=None, token=None, proxies=None,
                   api_url='https://api.platform.dessia.tech',
-                  max_retries=10,
-                  retry_interval=2):
+                  max_retries=10, retry_interval=2):
         Client.__init__(self, username=username, password=password,
                         token=token, proxies=proxies, api_url=api_url,
                         max_retries=max_retries, retry_interval=retry_interval)
@@ -809,14 +799,12 @@ class AdminClient(Client):
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
-        
-    
+
     def import_errors(self):
         r = requests.get('{}/admin/import-errors'.format(self.api_url),
                          headers=self.auth_header,
                          proxies=self.proxies)
         return r
-        
     
     def refresh_models(self):
         r = requests.get('{}/admin/models/refresh'.format(self.api_url),
