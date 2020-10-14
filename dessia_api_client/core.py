@@ -927,7 +927,12 @@ class AdminClient(Client):
         data = {'owner': owner,
                 'time': time}
         
-        return requests.post('{}/admin/computation-usage/{}'.format(self.api_url),
+        return requests.post('{}/admin/computation-usage'.format(self.api_url),
                              headers=self.auth_header,
                              proxies=self.proxies,
                              json=data)
+    
+    def stats(self):
+        return requests.get('{}/admin/stats'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies)
