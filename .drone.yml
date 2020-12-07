@@ -5,57 +5,32 @@ name: default
 
 steps:
 - name: install and run scripts
-  image: python:3.7
+  image: python:3.8
   commands:
   - git fetch --tags
   - python setup.py install
 
 - name: develop
-  image: python:3.7
+  image: python:3.8
   commands:
   - python setup.py develop
 
 - name: generate sdist
-  image: python:3.7
+  image: python:3.8
   commands:
   - git fetch --tags
   - python setup.py sdist
 
-- name: push opensource from sdist
-  image: alpine/git
+- name: upload to pypi
+  image: plugins/pypi
   when:
-    branch: 
-    - master
-    event: 
-    - push
-  commands:
-  - git clone https://gitea.dessia.tech/OpenSource/dessia-api-client.git git-opensource
-  - cd git-opensource
-  - git branch from_proprietary
-  - git checkout from_proprietary
-  - git pull origin from_proprietary
-  - git config --global user.email "root@dessia.tech"
-  - git config --global user.name "Root commit bot"
-  - tar -vxf ../dist/*.tar.gz --strip-components=1 -C .
-  - git add -A
-  - if ! [[ -z $(git status -s -uno) ]]; then git commit -m "Automated commit from dessia common proprietary repo"; fi
-  - git push origin from_proprietary
+      event: tag
+  settings:
+    skip_build: True
+    username: dessia_tech
+    password:
+        from_secret: pypi_password
 
-- name: copy tag to opensource
-  image: alpine/git
-  when:
-    event:
-    - tag
-  commands:
-  - git clone https://gitea.dessia.tech/OpenSource/dessia-api-client.git git-opensource
-  - cd git-opensource
-  - git branch from_proprietary
-  - git checkout from_proprietary
-  - git pull origin from_proprietary
-  - git config --global user.email "root@dessia.tech"
-  - git config --global user.name "Root commit bot"
-  - git tag -a ${DRONE_TAG} -m ${DRONE_TAG}
-  - git push origin --tags
 
 - name: notify
   when:
