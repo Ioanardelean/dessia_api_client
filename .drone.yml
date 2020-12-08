@@ -31,6 +31,20 @@ steps:
     password:
         from_secret: pypi_password
 
+- name: upload doc master
+  image: appleboy/drone-scp
+  when: 
+    branch: 
+      - master
+  settings:
+    host: austerlitz.dessia.tech
+    target: /var/www/documentation/dessia_api_client/
+    source: doc/build/html/*
+    strip_components: 3
+    username: drone
+    password:
+      from_secret: ssh_drone_password
+
 
 - name: notify
   when:
