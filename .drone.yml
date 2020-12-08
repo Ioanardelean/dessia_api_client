@@ -15,11 +15,12 @@ steps:
   commands:
   - python setup.py develop
 
-- name: generate sdist
+- name: generate dists
   image: python:3.8
   commands:
   - git fetch --tags
-  - python setup.py sdist
+  - pip install wheel
+  - python setup.py sdist bdist_wheel
 
 - name: upload to pypi
   image: plugins/pypi
@@ -30,13 +31,6 @@ steps:
     username: dessia_tech
     password:
         from_secret: pypi_password
-
-- name: create dist
-  image: python:3.8
-  commands:
-  - pip install wheel
-  - python setup.py sdist bdist_wheel
-
 
 - name: upload doc master
   image: appleboy/drone-scp
