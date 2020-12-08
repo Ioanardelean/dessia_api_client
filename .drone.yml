@@ -31,6 +31,13 @@ steps:
     password:
         from_secret: pypi_password
 
+- name: create dist
+  image: python:3.8
+  commands:
+  - pip install wheel
+  - python setup.py sdist bdist_wheel
+
+
 - name: upload doc master
   image: appleboy/drone-scp
   when: 
