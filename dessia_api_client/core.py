@@ -337,7 +337,7 @@ class Client:
                       embedded_subobjects: bool = False, owner=None):
         data = {'object': {'object_class': object_class,
                            'json': StringifyDictKeys(new_object.to_dict())},
-                'embedded_subobjects' : embedded_subobjects}
+                'embedded_subobjects': embedded_subobjects}
         if owner is not None:
             data['owner'] = owner
         url = '{}/objects/{}/{}/replace'
