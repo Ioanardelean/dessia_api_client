@@ -800,6 +800,19 @@ class AdminClient(Client):
                          proxies=self.proxies)
         return r
 
+    def get_config(self):
+        r = requests.get('{}/admin/config'.format(self.api_url),
+                         headers=self.auth_header,
+                         proxies=self.proxies)
+        return r
+
+    def update_config(self, update_dict):
+        r = requests.post('{}/admin/config'.format(self.api_url),
+                          json=update_dict,
+                          headers=self.auth_header,
+                          proxies=self.proxies)
+        return r
+
     def import_errors(self):
         r = requests.get('{}/admin/import-errors'.format(self.api_url),
                          headers=self.auth_header,
