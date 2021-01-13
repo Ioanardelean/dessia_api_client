@@ -786,10 +786,11 @@ class Client:
                              headers=self.auth_header,
                              proxies=self.proxies)
 
+
 class AdminClient(Client):
     def __init__(self, username=None, password=None, token=None, proxies=None,
-                  api_url='https://api.platform.dessia.tech',
-                  max_retries=10, retry_interval=2):
+                 api_url='https://api.platform.dessia.tech',
+                 max_retries=10, retry_interval=2):
         Client.__init__(self, username=username, password=password,
                         token=token, proxies=proxies, api_url=api_url,
                         max_retries=max_retries, retry_interval=retry_interval)
@@ -866,9 +867,9 @@ class AdminClient(Client):
                          proxies=self.proxies)
         return r
 
-    def update_application(self, application_id:int, 
-                           name:str=None, active:bool=None,
-                           installed_distribution_id:int=None):
+    def update_application(self, application_id: int,
+                           name: str = None, active: bool = None,
+                           installed_distribution_id: int = None):
         data = {}
         if name:
             data['name'] = name
@@ -879,73 +880,56 @@ class AdminClient(Client):
         if not data:
             print('Empty data, no need to fire a request')
             return None
-        
-        return requests.post('{}/applications/{}'.format(self.api_url, application_id),
+
+        url = '{}/applications/{}'
+        return requests.post(url.format(self.api_url, application_id),
                              headers=self.auth_header,
                              proxies=self.proxies,
                              json=data)
 
-    def delete_application(self, application_id:int):
-        return requests.delete('{}/applications/{}'.format(self.api_url, application_id),
+    def delete_application(self, application_id: int):
+        url = '{}/applications/{}'
+        return requests.delete(url.format(self.api_url, application_id),
                                headers=self.auth_header,
                                proxies=self.proxies)
 
-    
     def upload_file_distribution(self, distribution_filepath):
         files = {'file': open(distribution_filepath, 'rb')}
-        return requests.post('{}/file-application-distributions'.format(self.api_url),
-                             headers=self.auth_header,
-                             proxies=self.proxies,
-                             files=files)
+        url = '{}/file-application-distributions'
+        return requests.post(url.format(self.api_url), proxies=self.proxies,
+                             headers=self.auth_header, files=files)
 
     def create_git_distribution(self, http_url, username, token):
-        data = {'http_url': http_url,
-                'username': username,
-                'token': token}
-        return requests.post('{}/git-application-distributions'.format(self.api_url),
-                             headers=self.auth_header,
-                             proxies=self.proxies,
-                             json=data)
+        data = {'http_url': http_url, 'username': username, 'token': token}
+        url = '{}/git-application-distributions'
+        return requests.post(url.format(self.api_url), proxies=self.proxies,
+                             headers=self.auth_header, json=data)
 
+    def delete_distribution(self, distribution_id: int):
+        url = '{}/application-distributions/{}'
+        return requests.delete(url.format(self.api_url, distribution_id),
+                               headers=self.auth_header, proxies=self.proxies)
     
-    def delete_distribution(self, distribution_id:int):
-        return requests.delete('{}/application-distributions/{}'.format(self.api_url, distribution_id),
-                               headers=self.auth_header,
-                               proxies=self.proxies)
-    
-    def update_user(self, user_id:int, 
-                    first_name:str=None,
-                    last_name:str=None,
-                    active:bool=None,
-                    admin:bool=None):
-        data = {}
-        for attr_name, attr_value in [('first_name', first_name),
-                                      ('last_name', last_name),
-                                      ('active', active),
-                                      ('admin', admin)]:
-            if attr_value:
-                data['attr_name'] = attr_value
-                
+    def update_user(self, user_id: int, first_name: str = None,
+                    last_name: str = None, active: bool = None,
+                    admin: bool = None):
+        arguments = {'first_name': first_name, 'last_name': last_name,
+                     'active': active, 'admin': admin}
+        data = {k: v for k, v in arguments.items() if v is not None}
         if not data:
             print('Empty data, no need to fire a request')
             return None
-        
-        return requests.post('{}/admin/users/{}'.format(self.api_url, user_id),
-                             headers=self.auth_header,
-                             proxies=self.proxies,
-                             json=data)
-    
-    
-    def add_computation_usage(self, owner:str, time:float):
-        data = {'owner': owner,
-                'time': time}
-        
-        return requests.post('{}/admin/computation-usage'.format(self.api_url),
-                             headers=self.auth_header,
-                             proxies=self.proxies,
-                             json=data)
-    
+
+        url = '{}/admin/users/{}'
+        return requests.post(url.format(self.api_url, user_id), json=data,
+                             headers=self.auth_header, proxies=self.proxies)
+
+    def add_computation_usage(self, owner: str, time: float):
+        data = {'owner': owner, 'time': time}
+        url = '{}/admin/computation-usage'
+        return requests.post(url.format(self.api_url), proxies=self.proxies,
+                             headers=self.auth_header, json=data)
+
     def stats(self):
         return requests.get('{}/admin/stats'.format(self.api_url),
-                             headers=self.auth_header,
-                             proxies=self.proxies)
+                            headers=self.auth_header, proxies=self.proxies)
