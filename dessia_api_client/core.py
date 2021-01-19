@@ -108,6 +108,13 @@ class InFilter(Filter):
         Filter.__init__(self, attribute, 'in', values)
 
 
+def instantiate_object(json):
+    module_name, class_name = json['object_class'].rsplit('.', 1)
+    module = importlib.import_module(module_name)
+    object_class = getattr(module, class_name)
+    return object_class.dict_to_object(json['object_dict'])
+
+
 class Client:
     def __init__(self, username=None, password=None, token=None,
                  proxies=None, api_url='https://api.platform.dessia.tech',
@@ -259,21 +266,31 @@ class Client:
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
-    def GetObject(self, object_class, object_id, instantiate=True):
+    def GetObject(self, object_class: str, object_id: str,
+                  instantiate: bool = True):
         payload = {'embedded_subobjects': str(instantiate).casefold()}
-        r = requests.get('{}/objects/{}/{}'.format(self.api_url,
-                                                   object_class,
-                                                   object_id),
-                         headers=self.auth_header,
-                         params=payload,
-                         proxies=self.proxies)
+        url = '{}/objects/{}/{}'.format(self.api_url, object_class,
+                                           object_id)
+        r = requests.get(url, headers=self.auth_header,
+                         params=payload, proxies=self.proxies)
         if instantiate:
-            module_name = '.'.join(object_class.split('.')[:-1])
-            class_name = object_class.split('.')[-1]
-            module = importlib.import_module(module_name)
-            object_class = getattr(module, class_name)
-            return object_class.dict_to_object(r.json()['object_dict'])
+            return instantiate_object(r.json())
         return r
+
+    def get_subobject(self, object_class: str, object_id: str,
+                      deep_attribute: str = None, instantiate: bool = True):
+        payload = {'embedded_subobjects': str(instantiate).casefold()}
+        url = '{}/objects/{}/{}/{}'.format(self.api_url, object_class,
+                                           object_id, deep_attribute)
+        req = requests.get(url, headers=self.auth_header,
+                           params=payload, proxies=self.proxies)
+        if instantiate:
+            result = req.json()
+            if dc.is_sequence(result):
+                return [instantiate_object(v) for v in result]
+            else:
+                return instantiate_object(result)
+        return req
 
     def GetObjectPlotData(self, object_class, object_id):
         url = '{}/objects/{}/{}/plot-data'
@@ -657,7 +674,6 @@ class Client:
     def my_network(self):
         return requests.get('{}/account/network'.format(self.api_url),
                             headers=self.auth_header, proxies=self.proxies)
-
 
 
 class AdminClient(Client):
