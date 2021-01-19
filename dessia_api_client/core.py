@@ -949,3 +949,22 @@ class AdminClient(Client):
         return requests.get('{}/admin/stats'.format(self.api_url),
                              headers=self.auth_header,
                              proxies=self.proxies)
+
+    def edit_style(self, *,
+                   logo_filename:str=None,
+                   logo_small_filename:str=None,
+                   favicon_filename:str=None):
+        files = {}
+        for filename, value in [('logo', logo_filename),
+                                ('logo-small', logo_small_filename),
+                                 ('favicon', favicon_filename)]:
+            if value is not None:
+                files = {filename: open(value, 'rb')}
+        if not files:
+            print('nothing to upload')
+            return None
+        print(files)
+        return requests.post('{}/style'.format(self.api_url),
+                             headers=self.auth_header,
+                             proxies=self.proxies,
+                             files=files)
