@@ -385,18 +385,36 @@ class Client:
             if class_objects:
                 objects.extend(class_objects)
         validator = ''.join(random.choices(string.ascii_uppercase, k=6))
-        print('This will delete all {} objects'.format(len(objects)))
+        print('\nThis will delete all {} objects'.format(len(objects)))
         print('Confirm by typing in following code : {}'.format(validator))
-        print('Let empty to abort.')
+        print('Let empty to abort.\n')
         confirm = input()
+        count = 0
         if confirm == validator:
-            for object_ in objects:
-                self.delete_object(object_['object_class'], object_['id'])
-            print('All {} objects successfully deleted'.format(len(objects)))
+            limitation_reached = False
+            while not limitation_reached and count < len(objects):
+                object_ = objects[count]
+                r = self.delete_object(object_['object_class'], object_['id'])
+                if r.status_code in [200, 201]:
+                    count += 1
+                elif r.status_code == 429:
+                    print("\nMaximum amount of requests reached (300/h).")
+                    limitation_reached = True
+                else:
+                    log = "\nEncountered unknow error with status code {}."
+                    print(log.format(r.status_code))
+                    print("Aborting deletion for safety reasons.")
+                    limitation_reached = True
+            if limitation_reached:
+                log = "\nOnly removed {} out of {} objects."
+                print(log.format(count, len(objects)))
+            else:
+                log = '\nAll {} objects successfully deleted'
+                print(log.format(len(objects)))
         elif not confirm:
-            print('Deletion aborted')
+            print('\nDeletion aborted')
         else:
-            print('Input did not match validator. Deletion aborted')
+            print('\nInput did not match validator. Deletion aborted')
     
     def method_attributes(self, object_class, object_id):
         url = '{}/objects/{}/{}/method_attributes'
