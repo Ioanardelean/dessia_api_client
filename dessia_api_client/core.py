@@ -115,6 +115,21 @@ def instantiate_object(json):
     return object_class.dict_to_object(json['object_dict'])
 
 
+def confirm(action: str = 'Action'):
+    validator = ''.join(random.choices(string.ascii_uppercase, k=6))
+    print('Confirm by typing in following code : {}'.format(validator))
+    print('Let empty to abort.\n')
+    validation = input()
+    if validation == validator:
+        return True
+    elif not validation:
+        print('\n{} aborted'.format(action))
+        return False
+    else:
+        print('\nInput did not match validator. {} aborted'.format(action))
+        return False
+
+
 class Client:
     def __init__(self, username=None, password=None, token=None,
                  proxies=None, api_url='https://api.platform.dessia.tech',
@@ -269,11 +284,11 @@ class Client:
     def GetObject(self, object_class: str, object_id: str,
                   instantiate: bool = True):
         payload = {'embedded_subobjects': str(instantiate).casefold()}
-        url = '{}/objects/{}/{}'.format(self.api_url, object_class,
-                                           object_id)
-        r = requests.get(url, headers=self.auth_header,
-                         params=payload, proxies=self.proxies)
-        if instantiate:
+        url = '{}/objects/{}/{}'
+        r = requests.get(url.format(self.api_url, object_class, object_id),
+                         headers=self.auth_header, params=payload,
+                         proxies=self.proxies)
+        if instantiate and r.status_code == 200:
             return instantiate_object(r.json())
         return r
 
@@ -377,44 +392,25 @@ class Client:
                             headers=self.auth_header, proxies=self.proxies)
         return r
 
+    def delete_all_objects_from_class(self, object_class=''):
+        objects = self.GetAllClassObjects(object_class).json()
+        log = '\nThis will delete {} objects from class {}'
+        print(log.format(len(objects), object_class))
+        confirmed = confirm('Deletion')
+        if confirmed:
+            url = '{}/objects/{}'
+            r = requests.delete(url.format(self.api_url, object_class),
+                                headers=self.auth_header, proxies=self.proxies)
+            return r
+
     def delete_all_objects(self):
-        classes = self.GetObjectClasses().json()
-        objects = []
-        for classname in classes:
-            class_objects = self.GetAllClassObjects(classname).json()
-            if class_objects:
-                objects.extend(class_objects)
-        validator = ''.join(random.choices(string.ascii_uppercase, k=6))
-        print('\nThis will delete all {} objects'.format(len(objects)))
-        print('Confirm by typing in following code : {}'.format(validator))
-        print('Let empty to abort.\n')
-        confirm = input()
-        count = 0
-        if confirm == validator:
-            limitation_reached = False
-            while not limitation_reached and count < len(objects):
-                object_ = objects[count]
-                r = self.delete_object(object_['object_class'], object_['id'])
-                if r.status_code in [200, 201]:
-                    count += 1
-                elif r.status_code == 429:
-                    print("\nMaximum amount of requests reached (300/h).")
-                    limitation_reached = True
-                else:
-                    log = "\nEncountered unknow error with status code {}."
-                    print(log.format(r.status_code))
-                    print("Aborting deletion for safety reasons.")
-                    limitation_reached = True
-            if limitation_reached:
-                log = "\nOnly removed {} out of {} objects."
-                print(log.format(count, len(objects)))
-            else:
-                log = '\nAll {} objects successfully deleted'
-                print(log.format(len(objects)))
-        elif not confirm:
-            print('\nDeletion aborted')
-        else:
-            print('\nInput did not match validator. Deletion aborted')
+        print('\nThis will delete all objects from database.')
+        confirmed = confirm('Deletion')
+        if confirmed:
+            url = '{}/objects'
+            r = requests.delete(url.format(self.api_url),
+                                headers=self.auth_header, proxies=self.proxies)
+            return r
     
     def method_attributes(self, object_class, object_id):
         url = '{}/objects/{}/{}/method_attributes'
