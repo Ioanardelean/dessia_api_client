@@ -212,11 +212,11 @@ class Client:
                          headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def SubmitJob(self, object_class, id_, method, arguments=None):
+    def object_method(self, object_class, object_id, method, arguments=None):
         if arguments is None:
             arguments = {}
         serialized_arguments = dc.serialize_dict(arguments)
-        data = {'object': {'object_class': object_class, 'id': id_},
+        data = {'object': {'object_class': object_class, 'object_id': object_id},
                 'method': method, 'method_dict': serialized_arguments}
         r = requests.post('{}/jobs/submit'.format(self.api_url), json=data,
                           headers=self.auth_header, proxies=self.proxies)
