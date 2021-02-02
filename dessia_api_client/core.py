@@ -49,7 +49,7 @@ def retry_n_times(func):
     def func_wrapper(self, *args, **kwargs):
         connection_error = True
         n_tries = 1
-        while connection_error and (n_tries < self.max_retries):
+        while connection_error and (n_tries <= self.max_retries):
             try:
                 r = func(self, *args, **kwargs)
 #               if str(r.status_code)[0] == '2':
@@ -161,6 +161,26 @@ class Client:
 
         auth_header = {'Authorization': 'Bearer {}'.format(self.token)}
         return auth_header
+
+    def manual_request(self, path, method, payload=None):
+        if method.lower() == 'get':
+            r = requests.get('{}/{}'.format(self.api_url, path),
+                              proxies=self.proxies, headers=self.auth_header)
+        elif method.lower() == 'post':
+            r = requests.post('{}/{}'.format(self.api_url, path),
+                              json=payload, proxies=self.proxies, headers=self.auth_header)
+        elif method.lower() == 'delete':
+            r = requests.delete('{}/{}'.format(self.api_url, path),
+                              proxies=self.proxies, headers=self.auth_header)
+        elif method.lower() == 'put':
+            r = requests.put('{}/{}'.format(self.api_url, path),
+                              proxies=self.proxies, headers=self.auth_header)
+        elif method.lower() == 'options':
+            r = requests.put('{}/{}'.format(self.api_url, path),
+                              proxies=self.proxies, headers=self.auth_header)
+        else:
+            raise NotImplementedError('Unknown http method: {}'.format(method))
+        return r
 
     def create_user(self, email, password, first_name, last_name):
         data = {'email': email, 'password': password,
