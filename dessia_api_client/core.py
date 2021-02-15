@@ -164,7 +164,7 @@ class Client:
                               proxies=self.proxies)
             if r.status_code == 200:
                 self.token = r.json()['access_token']
-                self.token_exp = jwt.decode(self.token, verify=False)['exp']
+                self.token_exp = jwt.decode(self.token, options={"verify_signature": False})['exp']
                 print('Auth in {}s'.format(r.elapsed.total_seconds()))
             else:
                 print('Authentication error: ', r.text)

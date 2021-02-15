@@ -61,5 +61,5 @@ setup(name='dessia_api_client',
       author='DessiA Technologies',
       author_email='root@dessia.tech',
       packages=['dessia_api_client'],
-      install_requires=['PyJWT<2.0.0', 'requests', 'matplotlib'])
+      install_requires=['PyJWT>=2.0.0', 'requests', 'matplotlib'])
 
