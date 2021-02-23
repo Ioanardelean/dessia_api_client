@@ -301,6 +301,12 @@ class Client:
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
+    def get_subclass(self, object_class: str):
+        url = '{}/classes/{}/subclasses'
+        request = requests.get(url.format(self.api_url, object_class),
+                               headers=self.auth_header, proxies=self.proxies)
+        return request
+
     def GetObject(self, object_class: str, object_id: str,
                   instantiate: bool = True):
         payload = {'embedded_subobjects': str(instantiate).casefold()}
