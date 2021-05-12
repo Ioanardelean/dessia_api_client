@@ -8,6 +8,7 @@
 import jwt
 import time
 import getpass
+import warnings
 import importlib
 import requests
 import matplotlib.pyplot as plt
@@ -131,8 +132,9 @@ def confirm(action: str = 'Action'):
 
 
 class Client:
-    def __init__(self, username=None, password=None, token=None,
-                 proxies=None, api_url='https://api.platform.dessia.tech',
+    def __init__(self, api_url='https://api.platform.dessia.tech',
+                 username=None, password=None, token=None,
+                 proxies=None,
                  max_retries=10, retry_interval=2):
         self.username = username
         self.password = password
@@ -212,13 +214,17 @@ class Client:
 
         return r
 
-    def CreateTechnicalAccount(self, name, password):
+    def create_technical_account(self, name, password):
         data = {'name': name,
                 'password': password}
         url = '{}/technical_accounts/create'
         r = requests.post(url.format(self.api_url), json=data,
                           headers=self.auth_header, proxies=self.proxies)
         return r
+    
+    def CreateTechnicalAccount(self, name, password):
+        warnings.warn("CreateTechnicalAccount is deprecated; use create_technical_account instead", warnings.DeprecationWarning)
+        return self.create_technical_account(name, password)
 
     def verify_email(self, token):
         data = {'token': token}
@@ -242,10 +248,14 @@ class Client:
                           headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def JobDetails(self, job_id: int):
+    def job_details(self, job_id: int):
         r = requests.get('{}/jobs/{}'.format(self.api_url, job_id),
                          headers=self.auth_header, proxies=self.proxies)
         return r
+
+    def JobDetails(self, job_id: int):
+        warnings.warn("JobDetails is deprecated; use job_details instead", warnings.DeprecationWarning)
+        return self.job_details(job_id)
 
     def get_organization(self, organization_id: int):
         url = '{}/organizations/{}'
@@ -301,7 +311,7 @@ class Client:
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
-    def GetObject(self, object_class: str, object_id: str,
+    def get_object(self, object_class: str, object_id: str,
                   instantiate: bool = True):
         payload = {'embedded_subobjects': str(instantiate).casefold()}
         url = '{}/objects/{}/{}'
@@ -311,6 +321,11 @@ class Client:
         if instantiate and r.status_code == 200:
             return instantiate_object(r.json())
         return r
+    
+    def GetObject(self, object_class: str, object_id: str,
+                  instantiate: bool = True):
+        warnings.warn("GetObject is deprecated; use get_object instead", warnings.DeprecationWarning)
+        return self.get_object(object_class, object_id, instantiate)
 
     def get_subobject(self, object_class: str, object_id: str,
                       deep_attribute: str = None, instantiate: bool = True):
@@ -329,12 +344,6 @@ class Client:
 
     def GetObjectPlotData(self, object_class, object_id):
         url = '{}/objects/{}/{}/plot-data'
-        r = requests.get(url.format(self.api_url, object_class, object_id),
-                         headers=self.auth_header, proxies=self.proxies)
-        return r
-
-    def GetObjectSTLToken(self, object_class, object_id):
-        url = '{}/objects/{}/{}/stl'
         r = requests.get(url.format(self.api_url, object_class, object_id),
                          headers=self.auth_header, proxies=self.proxies)
         return r
@@ -385,7 +394,7 @@ class Client:
         return r
 
     @retry_n_times
-    def ReplaceObject(self, object_class, object_id, new_object,
+    def replace_object(self, object_class, object_id, new_object,
                       embedded_subobjects: bool = False, owner=None):
         data = {'object': {'object_class': object_class,
                            'json': StringifyDictKeys(new_object.to_dict())},
@@ -399,12 +408,25 @@ class Client:
         print(r.status_code)
         return r
 
-    def UpdateObject(self, object_class, object_id, update_dict):
+    def ReplaceObject(self, object_class, object_id, new_object,
+                      embedded_subobjects: bool = False, owner=None):
+        warnings.warn("ReplaceObject is deprecated; use replace_object instead", warnings.DeprecationWarning)
+        return self.replace_object(object_class, object_id, new_object,
+                                   embedded_subobjects, owner)
+        
+
+    def update_object(self, object_class, object_id, update_dict):
         url = '{}/objects/{}/{}/update'
         r = requests.post(url.format(self.api_url, object_class, object_id),
                           headers=self.auth_header, json=update_dict,
                           proxies=self.proxies)
         return r
+
+
+    def UpdateObject(self, object_class, object_id, update_dict):
+        warnings.warn("UpdateObject is deprecated; use update_object instead", warnings.DeprecationWarning)
+        return self.update_object(object_class, object_id, update_dict)
+
 
     def delete_object(self, object_class, object_id):
         url = '{}/objects/{}/{}'
@@ -711,8 +733,8 @@ class Client:
 
 
 class AdminClient(Client):
-    def __init__(self, username=None, password=None, token=None, proxies=None,
-                 api_url='https://api.platform.dessia.tech',
+    def __init__(self, api_url='https://api.platform.dessia.tech',
+                 username=None, password=None, token=None, proxies=None,
                  max_retries=10, retry_interval=2):
         Client.__init__(self, username=username, password=password,
                         token=token, proxies=proxies, api_url=api_url,
@@ -862,3 +884,13 @@ class AdminClient(Client):
                              headers=self.auth_header,
                              proxies=self.proxies,
                              files=files)
+
+    def delete_public_objects(self):
+        print('\nThis will delete all public objects from database.')
+        confirmed = confirm('Deletion')
+        if confirmed:
+            url = '{}/objects/public'
+            r = requests.delete(url.format(self.api_url),
+                                headers=self.auth_header, proxies=self.proxies)
+            return r
+        print('Aborted')
