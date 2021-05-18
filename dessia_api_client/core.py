@@ -120,7 +120,7 @@ def confirm(action: str = 'Action'):
     validator = ''.join(random.choices(string.ascii_uppercase, k=6))
     print('Confirm by typing in following code : {}'.format(validator))
     print('Let empty to abort.\n')
-    validation = input()
+    validation = input('> ')
     if validation == validator:
         return True
     elif not validation:
@@ -434,20 +434,28 @@ class Client:
                             headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def delete_all_objects_from_class(self, object_class=''):
-        objects = self.GetAllClassObjects(object_class).json()
-        log = '\nThis will delete {} objects from class {}'
-        print(log.format(len(objects), object_class))
-        confirmed = confirm('Deletion')
+    def delete_all_objects_from_class(self, object_class='', interactive:bool=True):
+        if interactive:
+            objects = self.GetAllClassObjects(object_class).json()
+            log = '\nThis will delete {} objects from class {}'
+            print(log.format(len(objects), object_class))
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+
         if confirmed:
             url = '{}/objects/{}'
             r = requests.delete(url.format(self.api_url, object_class),
                                 headers=self.auth_header, proxies=self.proxies)
             return r
 
-    def delete_all_objects(self):
-        print('\nThis will delete all objects from database.')
-        confirmed = confirm('Deletion')
+    def delete_all_objects(self, interactive:bool=True):
+        if interactive:
+            print('\nThis will delete all objects from database.')
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+            
         if confirmed:
             url = '{}/objects'
             r = requests.delete(url.format(self.api_url),
@@ -885,9 +893,13 @@ class AdminClient(Client):
                              proxies=self.proxies,
                              files=files)
 
-    def delete_public_objects(self):
-        print('\nThis will delete all public objects from database.')
-        confirmed = confirm('Deletion')
+    def delete_public_objects(self, interactive:bool=False):
+        if interactive:
+            print('\nThis will delete all public objects from database.')
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+            
         if confirmed:
             url = '{}/objects/public'
             r = requests.delete(url.format(self.api_url),
