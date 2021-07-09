@@ -361,12 +361,26 @@ class Client:
                          headers=self.auth_header, proxies=self.proxies)
         return r
 
+    def _wait_for_object_created(self, payload):
+        r = requests.post('{}/objects'.format(self.api_url), json=payload,
+                          headers=self.auth_header, proxies=self.proxies)
+        
+        task_id = r.json()['task_id']
+        while r.status_code != 201:
+            print(r.text)
+            print('retrying to see if object was inserted')
+            r = requests.get('{}/object-inserts/{}'.format(self.api_url, task_id),
+                          headers=self.auth_header, proxies=self.proxies)
+            time.sleep(2.)
+            
+        return r
+
     @retry_n_times
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True,
                                          public=False):
         
-        data = {
+        payload = {
             'object': {
                 'object_class': '{}.{}'.format(obj.__class__.__module__,
                                                obj.__class__.__name__),
@@ -375,25 +389,21 @@ class Client:
             'embedded_subobjects': embedded_subobjects,
             'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url), json=data,
-                          headers=self.auth_header, proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+        
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
     def create_object_from_object_dict(self, object_dict, owner=None,
                                        embedded_subobjects=True, public=False):
-        data = {'object': {'object_class': object_dict['object_class'],
+        payload = {'object': {'object_class': object_dict['object_class'],
                            'json': StringifyDictKeys(object_dict)},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url),
-                          headers=self.auth_header,
-                          json=data,
-                          proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
     def replace_object(self, object_class, object_id, new_object,
