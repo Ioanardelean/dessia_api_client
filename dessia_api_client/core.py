@@ -257,6 +257,12 @@ class Client:
         warnings.warn("JobDetails is deprecated; use job_details instead", DeprecationWarning)
         return self.job_details(job_id)
 
+    def delete_job(self, job_id:int):
+        r = requests.delete('{}/jobs/{}'.format(self.api_url, job_id),
+                         headers=self.auth_header, proxies=self.proxies)
+        return r
+
+
     def get_organization(self, organization_id: int):
         url = '{}/organizations/{}'
         r = requests.get(url.format(self.api_url, organization_id),
