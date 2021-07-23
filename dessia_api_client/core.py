@@ -364,7 +364,8 @@ class Client:
     def _wait_for_object_created(self, payload):
         r = requests.post('{}/objects'.format(self.api_url), json=payload,
                           headers=self.auth_header, proxies=self.proxies)
-        
+        if not 'task_id' in r.json():
+            return r
         task_id = r.json()['task_id']
         while r.status_code != 201:
             print(r.text)
