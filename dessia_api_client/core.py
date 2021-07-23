@@ -254,7 +254,7 @@ class Client:
         return r
 
     def JobDetails(self, job_id: int):
-        warnings.warn("JobDetails is deprecated; use job_details instead", warnings.DeprecationWarning)
+        warnings.warn("JobDetails is deprecated; use job_details instead", DeprecationWarning)
         return self.job_details(job_id)
 
     def get_organization(self, organization_id: int):
@@ -312,8 +312,10 @@ class Client:
         return request
 
     def get_object(self, object_class: str, object_id: str,
-                  instantiate: bool = True):
-        payload = {'embedded_subobjects': str(instantiate).casefold()}
+                  instantiate: bool = True, embedded_subobjects=True):
+        if instantiate and not embedded_subobjects:
+            raise ValueError('embedded_subobjects must be set to True when instantiating')
+        payload = {'embedded_subobjects': str(embedded_subobjects).casefold()}
         url = '{}/objects/{}/{}'
         r = requests.get(url.format(self.api_url, object_class, object_id),
                          headers=self.auth_header, params=payload,
@@ -324,7 +326,7 @@ class Client:
     
     def GetObject(self, object_class: str, object_id: str,
                   instantiate: bool = True):
-        warnings.warn("GetObject is deprecated; use get_object instead", warnings.DeprecationWarning)
+        warnings.warn("GetObject is deprecated; use get_object instead", DeprecationWarning)
         return self.get_object(object_class, object_id, instantiate)
 
     def get_subobject(self, object_class: str, object_id: str,
@@ -359,12 +361,26 @@ class Client:
                          headers=self.auth_header, proxies=self.proxies)
         return r
 
+    def _wait_for_object_created(self, payload):
+        r = requests.post('{}/objects'.format(self.api_url), json=payload,
+                          headers=self.auth_header, proxies=self.proxies)
+        
+        task_id = r.json()['task_id']
+        while r.status_code != 201:
+            print(r.text)
+            print('retrying to see if object was inserted')
+            r = requests.get('{}/object-inserts/{}'.format(self.api_url, task_id),
+                          headers=self.auth_header, proxies=self.proxies)
+            time.sleep(2.)
+            
+        return r
+
     @retry_n_times
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True,
                                          public=False):
         
-        data = {
+        payload = {
             'object': {
                 'object_class': '{}.{}'.format(obj.__class__.__module__,
                                                obj.__class__.__name__),
@@ -373,25 +389,21 @@ class Client:
             'embedded_subobjects': embedded_subobjects,
             'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url), json=data,
-                          headers=self.auth_header, proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+        
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
     def create_object_from_object_dict(self, object_dict, owner=None,
                                        embedded_subobjects=True, public=False):
-        data = {'object': {'object_class': object_dict['object_class'],
+        payload = {'object': {'object_class': object_dict['object_class'],
                            'json': StringifyDictKeys(object_dict)},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url),
-                          headers=self.auth_header,
-                          json=data,
-                          proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
     def replace_object(self, object_class, object_id, new_object,
@@ -410,7 +422,7 @@ class Client:
 
     def ReplaceObject(self, object_class, object_id, new_object,
                       embedded_subobjects: bool = False, owner=None):
-        warnings.warn("ReplaceObject is deprecated; use replace_object instead", warnings.DeprecationWarning)
+        warnings.warn("ReplaceObject is deprecated; use replace_object instead", DeprecationWarning)
         return self.replace_object(object_class, object_id, new_object,
                                    embedded_subobjects, owner)
         
@@ -424,7 +436,7 @@ class Client:
 
 
     def UpdateObject(self, object_class, object_id, update_dict):
-        warnings.warn("UpdateObject is deprecated; use update_object instead", warnings.DeprecationWarning)
+        warnings.warn("UpdateObject is deprecated; use update_object instead", DeprecationWarning)
         return self.update_object(object_class, object_id, update_dict)
 
 
