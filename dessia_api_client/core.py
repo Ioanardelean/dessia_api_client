@@ -63,7 +63,7 @@ def retry_n_times(func):
             n_tries += 1
             time.sleep(self.retry_interval)
         if connection_error:
-            raise APIConnectionError
+            raise APIConnectionError('Retried {} times, API is not reachable'.format(self.max_retries))
         else:
             return r
     return func_wrapper
@@ -135,7 +135,7 @@ class Client:
     def __init__(self, api_url='https://api.platform.dessia.tech',
                  username=None, password=None, token=None,
                  proxies=None,
-                 max_retries=10, retry_interval=2):
+                 max_retries=10, retry_interval=3):
         self.username = username
         self.password = password
         self.token = token
