@@ -857,6 +857,14 @@ class AdminClient(Client):
         return requests.post(url.format(self.api_url), proxies=self.proxies,
                              headers=self.auth_header, files=files)
 
+    def create_pip_distribution(self, package_name, package_version=None):
+        data = {'name': package_name}
+        if package_version:
+            data['version']= package_version
+        url = '{}/pip-application-distributions'
+        return requests.post(url.format(self.api_url), proxies=self.proxies,
+                             headers=self.auth_header, json=data)
+
     def create_git_distribution(self, http_url, username, token):
         data = {'http_url': http_url, 'username': username, 'token': token}
         url = '{}/git-application-distributions'
@@ -924,3 +932,12 @@ class AdminClient(Client):
                                 headers=self.auth_header, proxies=self.proxies)
             return r
         print('Aborted')
+
+    def upload_file(self, filepath):
+        files = {'file': open(filepath, 'rb')}
+
+        return requests.post(f'{self.api_url}/files',
+                             proxies=self.proxies,
+                             headers=self.auth_header,
+                             files=files
+                             )
