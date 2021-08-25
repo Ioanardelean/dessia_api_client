@@ -2,5 +2,5 @@
 # -*- coding: utf-8 -*-
 
 import pkg_resources
-from .core import *
+from . import *
 __version__ = pkg_resources.require("dessia_api_client")[0].version
