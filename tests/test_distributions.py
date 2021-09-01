@@ -48,5 +48,26 @@ def basic_wheel_pip_dist_tests():
     validate_status_code(resp, 200)
 
 
+def test_install_from_archive():
+    user = TestFactory.get_user()
+
+    # cleanup existing apps
+    resp = user.applications.get_all_applications()
+    for app in resp.json():
+        resp = user.applications.delete_application(app["id"])
+        validate_status_code(resp, 200)
+
+    # install targz dist
+    resp = user.distributions.create_file_distribution(os.path.join(TestFactory.TEST_DATA_DIR, 'volmdlr-0.2.10.tar.gz'))
+    validate_status_code(resp, 201)
+    user.applications.delete_application(resp.json()['application']['id'])
+
+    # install zip dist
+    resp = user.distributions.create_file_distribution(os.path.join(TestFactory.TEST_DATA_DIR, 'volmdlr-0.2.10.zip'))
+    validate_status_code(resp, 201)
+    user.applications.delete_application(resp.json()['application']['id'])
+
+
 if __name__ == '__main__':
     basic_wheel_pip_dist_tests()
+    test_install_from_archive()
