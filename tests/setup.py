@@ -1,4 +1,4 @@
-from dessia_api_client.users import GenericUser
+from dessia_api_client.users import DessiaUser
 from dessia_api_client.utils.helpers import validate_status_code
 import os
 
@@ -13,7 +13,7 @@ class TestFactory:
     @classmethod
     def get_user(cls):
         if cls._user is None:
-            cls._user = GenericUser(email=cls.TEST_USER_EMAIL,
-                                    password=cls.TEST_USER_PASSWORD,
-                                    api_url=cls.TEST_API_URL)
+            cls._user = DessiaUser(email=cls.TEST_USER_EMAIL,
+                                   password=cls.TEST_USER_PASSWORD,
+                                   api_url=cls.TEST_API_URL)
         return cls._user

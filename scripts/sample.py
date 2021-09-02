@@ -1,8 +1,8 @@
-from dessia_api_client.users import GenericUser
+from dessia_api_client.users import DessiaUser
 
 # get an api user
 # replace with proper credentials
-brad = GenericUser("brad@dessia.tech", "brad_pass1!")
+brad = DessiaUser("brad@dessia.tech", "brad_pass1!")
 
 # run your tests/scripts
 # for eg:

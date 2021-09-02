@@ -8,7 +8,7 @@ from dessia_api_client.endpoints import admin, jobs, accounts, applications, fil
 from dessia_api_client.clients import ApiClient
 
 
-class GenericUser:
+class DessiaUser:
     def __init__(self, password, email,
                  api_url="https://api.platform.dessia.tech",
                  max_retries=3,
