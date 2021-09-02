@@ -8,6 +8,7 @@
 import jwt
 import time
 import getpass
+import warnings
 import importlib
 import requests
 import matplotlib.pyplot as plt
@@ -62,7 +63,7 @@ def retry_n_times(func):
             n_tries += 1
             time.sleep(self.retry_interval)
         if connection_error:
-            raise APIConnectionError
+            raise APIConnectionError('Retried {} times, API is not reachable'.format(self.max_retries))
         else:
             return r
     return func_wrapper
@@ -119,7 +120,7 @@ def confirm(action: str = 'Action'):
     validator = ''.join(random.choices(string.ascii_uppercase, k=6))
     print('Confirm by typing in following code : {}'.format(validator))
     print('Let empty to abort.\n')
-    validation = input()
+    validation = input('> ')
     if validation == validator:
         return True
     elif not validation:
@@ -131,9 +132,10 @@ def confirm(action: str = 'Action'):
 
 
 class Client:
-    def __init__(self, username=None, password=None, token=None,
-                 proxies=None, api_url='https://api.platform.dessia.tech',
-                 max_retries=10, retry_interval=2):
+    def __init__(self, api_url='https://api.platform.dessia.tech',
+                 username=None, password=None, token=None,
+                 proxies=None,
+                 max_retries=10, retry_interval=3):
         self.username = username
         self.password = password
         self.token = token
@@ -212,13 +214,17 @@ class Client:
 
         return r
 
-    def CreateTechnicalAccount(self, name, password):
+    def create_technical_account(self, name, password):
         data = {'name': name,
                 'password': password}
         url = '{}/technical_accounts/create'
         r = requests.post(url.format(self.api_url), json=data,
                           headers=self.auth_header, proxies=self.proxies)
         return r
+    
+    def CreateTechnicalAccount(self, name, password):
+        warnings.warn("CreateTechnicalAccount is deprecated; use create_technical_account instead", warnings.DeprecationWarning)
+        return self.create_technical_account(name, password)
 
     def verify_email(self, token):
         data = {'token': token}
@@ -242,10 +248,14 @@ class Client:
                           headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def JobDetails(self, job_id: int):
+    def job_details(self, job_id: int):
         r = requests.get('{}/jobs/{}'.format(self.api_url, job_id),
                          headers=self.auth_header, proxies=self.proxies)
         return r
+
+    def JobDetails(self, job_id: int):
+        warnings.warn("JobDetails is deprecated; use job_details instead", DeprecationWarning)
+        return self.job_details(job_id)
 
     def get_organization(self, organization_id: int):
         url = '{}/organizations/{}'
@@ -301,15 +311,17 @@ class Client:
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
-    def get_subclass(self, object_class: str):
+    def get_subclasses(self, object_class: str):
         url = '{}/classes/{}/subclasses'
         request = requests.get(url.format(self.api_url, object_class),
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
-    def GetObject(self, object_class: str, object_id: str,
-                  instantiate: bool = True):
-        payload = {'embedded_subobjects': str(instantiate).casefold()}
+    def get_object(self, object_class: str, object_id: str,
+                   instantiate: bool = True, embedded_subobjects=True):
+        if instantiate and not embedded_subobjects:
+            raise ValueError('embedded_subobjects must be set to True when instantiating')
+        payload = {'embedded_subobjects': str(embedded_subobjects).casefold()}
         url = '{}/objects/{}/{}'
         r = requests.get(url.format(self.api_url, object_class, object_id),
                          headers=self.auth_header, params=payload,
@@ -317,6 +329,11 @@ class Client:
         if instantiate and r.status_code == 200:
             return instantiate_object(r.json())
         return r
+    
+    def GetObject(self, object_class: str, object_id: str,
+                  instantiate: bool = True):
+        warnings.warn("GetObject is deprecated; use get_object instead", DeprecationWarning)
+        return self.get_object(object_class, object_id, instantiate)
 
     def get_subobject(self, object_class: str, object_id: str,
                       deep_attribute: str = None, instantiate: bool = True):
@@ -339,12 +356,6 @@ class Client:
                          headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def GetObjectSTLToken(self, object_class, object_id):
-        url = '{}/objects/{}/{}/stl'
-        r = requests.get(url.format(self.api_url, object_class, object_id),
-                         headers=self.auth_header, proxies=self.proxies)
-        return r
-
     def GetAllClassObjects(self, object_class):
         r = requests.get('{}/objects/{}'.format(self.api_url, object_class),
                          headers=self.auth_header, proxies=self.proxies)
@@ -356,12 +367,27 @@ class Client:
                          headers=self.auth_header, proxies=self.proxies)
         return r
 
+    def _wait_for_object_created(self, payload):
+        r = requests.post('{}/objects'.format(self.api_url), json=payload,
+                          headers=self.auth_header, proxies=self.proxies)
+        if not 'task_id' in r.json():
+            return r
+        task_id = r.json()['task_id']
+        while r.status_code != 201:
+            print(r.text)
+            print('retrying to see if object was inserted')
+            r = requests.get('{}/object-inserts/{}'.format(self.api_url, task_id),
+                          headers=self.auth_header, proxies=self.proxies)
+            time.sleep(2.)
+            
+        return r
+
     @retry_n_times
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True,
                                          public=False):
         
-        data = {
+        payload = {
             'object': {
                 'object_class': '{}.{}'.format(obj.__class__.__module__,
                                                obj.__class__.__name__),
@@ -370,28 +396,24 @@ class Client:
             'embedded_subobjects': embedded_subobjects,
             'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url), json=data,
-                          headers=self.auth_header, proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+        
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
     def create_object_from_object_dict(self, object_dict, owner=None,
                                        embedded_subobjects=True, public=False):
-        data = {'object': {'object_class': object_dict['object_class'],
+        payload = {'object': {'object_class': object_dict['object_class'],
                            'json': StringifyDictKeys(object_dict)},
                 'embedded_subobjects': embedded_subobjects,
                 'public': public}
         if owner is not None:
-            data['owner'] = owner
-        r = requests.post('{}/objects'.format(self.api_url),
-                          headers=self.auth_header,
-                          json=data,
-                          proxies=self.proxies)
-        return r
+            payload['owner'] = owner
+
+        return self._wait_for_object_created(payload)
 
     @retry_n_times
-    def ReplaceObject(self, object_class, object_id, new_object,
+    def replace_object(self, object_class, object_id, new_object,
                       embedded_subobjects: bool = False, owner=None):
         data = {'object': {'object_class': object_class,
                            'json': StringifyDictKeys(new_object.to_dict())},
@@ -405,12 +427,25 @@ class Client:
         print(r.status_code)
         return r
 
-    def UpdateObject(self, object_class, object_id, update_dict):
+    def ReplaceObject(self, object_class, object_id, new_object,
+                      embedded_subobjects: bool = False, owner=None):
+        warnings.warn("ReplaceObject is deprecated; use replace_object instead", DeprecationWarning)
+        return self.replace_object(object_class, object_id, new_object,
+                                   embedded_subobjects, owner)
+        
+
+    def update_object(self, object_class, object_id, update_dict):
         url = '{}/objects/{}/{}/update'
         r = requests.post(url.format(self.api_url, object_class, object_id),
                           headers=self.auth_header, json=update_dict,
                           proxies=self.proxies)
         return r
+
+
+    def UpdateObject(self, object_class, object_id, update_dict):
+        warnings.warn("UpdateObject is deprecated; use update_object instead", DeprecationWarning)
+        return self.update_object(object_class, object_id, update_dict)
+
 
     def delete_object(self, object_class, object_id):
         url = '{}/objects/{}/{}'
@@ -418,20 +453,28 @@ class Client:
                             headers=self.auth_header, proxies=self.proxies)
         return r
 
-    def delete_all_objects_from_class(self, object_class=''):
-        objects = self.GetAllClassObjects(object_class).json()
-        log = '\nThis will delete {} objects from class {}'
-        print(log.format(len(objects), object_class))
-        confirmed = confirm('Deletion')
+    def delete_all_objects_from_class(self, object_class='', interactive:bool=True):
+        if interactive:
+            objects = self.GetAllClassObjects(object_class).json()
+            log = '\nThis will delete {} objects from class {}'
+            print(log.format(len(objects), object_class))
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+
         if confirmed:
             url = '{}/objects/{}'
             r = requests.delete(url.format(self.api_url, object_class),
                                 headers=self.auth_header, proxies=self.proxies)
             return r
 
-    def delete_all_objects(self):
-        print('\nThis will delete all objects from database.')
-        confirmed = confirm('Deletion')
+    def delete_all_objects(self, interactive:bool=True):
+        if interactive:
+            print('\nThis will delete all objects from database.')
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+            
         if confirmed:
             url = '{}/objects'
             r = requests.delete(url.format(self.api_url),
@@ -717,8 +760,8 @@ class Client:
 
 
 class AdminClient(Client):
-    def __init__(self, username=None, password=None, token=None, proxies=None,
-                 api_url='https://api.platform.dessia.tech',
+    def __init__(self, api_url='https://api.platform.dessia.tech',
+                 username=None, password=None, token=None, proxies=None,
                  max_retries=10, retry_interval=2):
         Client.__init__(self, username=username, password=password,
                         token=token, proxies=proxies, api_url=api_url,
@@ -868,3 +911,17 @@ class AdminClient(Client):
                              headers=self.auth_header,
                              proxies=self.proxies,
                              files=files)
+
+    def delete_public_objects(self, interactive:bool=False):
+        if interactive:
+            print('\nThis will delete all public objects from database.')
+            confirmed = confirm('Deletion')
+        else:
+            confirmed = True
+            
+        if confirmed:
+            url = '{}/objects/public'
+            r = requests.delete(url.format(self.api_url),
+                                headers=self.auth_header, proxies=self.proxies)
+            return r
+        print('Aborted')
