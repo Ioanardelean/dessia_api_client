@@ -10,8 +10,11 @@ steps:
   - git fetch --tags
   - pip install sphinx sphinx_rtd_theme
   - python setup.py install
-  - cd doc
+  - cd tests
+  - python imports.py
+  - cd ../doc
   - make html
+  
 
 - name: develop
   image: python:3.8
@@ -38,8 +41,8 @@ steps:
 - name: upload doc master
   image: appleboy/drone-scp
   when: 
-    branch: 
-      - master
+    branch: master
+    event: push
   settings:
     host: austerlitz.dessia.tech
     target: /var/www/documentation/dessia_api_client/
