@@ -311,8 +311,14 @@ class Client:
                                headers=self.auth_header, proxies=self.proxies)
         return request
 
+    def get_subclasses(self, object_class: str):
+        url = '{}/classes/{}/subclasses'
+        request = requests.get(url.format(self.api_url, object_class),
+                               headers=self.auth_header, proxies=self.proxies)
+        return request
+
     def get_object(self, object_class: str, object_id: str,
-                  instantiate: bool = True, embedded_subobjects=True):
+                   instantiate: bool = True, embedded_subobjects=True):
         if instantiate and not embedded_subobjects:
             raise ValueError('embedded_subobjects must be set to True when instantiating')
         payload = {'embedded_subobjects': str(embedded_subobjects).casefold()}
