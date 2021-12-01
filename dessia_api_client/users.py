@@ -6,10 +6,13 @@ import requests
 from dessia_api_client.endpoints import admin, jobs, accounts, applications, files, objects, style, \
     marketplace, organisations, classes, workspaces, distributions
 from dessia_api_client.clients import PlatformApiClient
+import getpass
 
 
 class PlatformUser:
-    def __init__(self, email, password,
+    def __init__(self,
+                 email=None,
+                 password=None,
                  api_url="https://api.platform.dessia.tech",
                  max_retries=3,
                  retry_interval=3):
@@ -20,6 +23,15 @@ class PlatformUser:
         :param max_retries:
         :param retry_interval:
         """
+
+        # for simplicity, interactive mode by default
+        if email is None:
+            email = input('Email(User)/name(Technical Account) for DessIA API:')
+        if password is None:
+            password = getpass.getpass('Password for DessIA API:')
+
+        print(f'you will be connecting to : "{api_url}" as user : "{email}"')
+
         self.client = PlatformApiClient(email, password,
                                         api_url=api_url,
                                         max_retries=max_retries,
