@@ -109,12 +109,16 @@ class ObjectsEndPoint:
     def create_object_from_python_object(self, obj, owner=None,
                                          embedded_subobjects=True,
                                          public=False):
+        try:
+            dict_ = obj.to_dict(use_pointers=True)
+        except TypeError:
+            dict_ = obj.to_dict()
 
         payload = {
             'object': {
                 'object_class': '{}.{}'.format(obj.__class__.__module__,
                                                obj.__class__.__name__),
-                'json': stringify_dict_keys(obj.to_dict())
+                'json': stringify_dict_keys(dict_)
             },
             'embedded_subobjects': embedded_subobjects,
             'public': public}
