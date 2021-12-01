@@ -12,8 +12,6 @@ Connect your software with dessia platform instances
 pip(3) install dessia_api_client
 ```
 
-Create a config python file with database info
-
 ## Usage
 
 ```
