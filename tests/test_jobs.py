@@ -1,4 +1,4 @@
-from setup import TestFactory
+from factory import TestFactory
 from dessia_api_client.utils.helpers import validate_status_code
 import logging
 

@@ -12,7 +12,7 @@ from dessia_api_client.clients import PlatformApiClient
 
 
 class Applications:
-    def __init__(self, client):
+    def __init__(self, client: PlatformApiClient):
         self.client = client
 
     def get_active_applications(self):

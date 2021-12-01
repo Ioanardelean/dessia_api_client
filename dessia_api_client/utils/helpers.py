@@ -8,11 +8,12 @@ import string
 import time
 
 import requests
+from .exceptions import APIConnectionError
 
 
-def validate_status_code(response, expected_code):
+def validate_status_code(response: requests.Response, expected_code):
     assert response.status_code == expected_code, \
-        f'Expected status code was {expected_code}, instead we got : {response.status_code} '
+        f'Expected status code was {expected_code}, instead we got : {response.status_code} \n {response.content}'
 
 
 def stringify_dict_keys(d):

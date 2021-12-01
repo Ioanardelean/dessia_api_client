@@ -7,8 +7,9 @@ import logging
 
 logging.getLogger().level = logging.INFO
 
-test_jobs.basic_jobs_tests()
-test_files.basic_files_upload_tests()
-test_distributions.basic_wheel_pip_dist_tests()
-test_marketplace.basic_marketplace_tests()
-test_objects.basic_objects_tests()
+if __name__ == '__main__':
+    test_jobs.basic_jobs_tests()
+    test_files.basic_files_upload_tests()
+    test_distributions.basic_wheel_pip_dist_tests()
+    test_marketplace.basic_marketplace_tests()
+    test_objects.basic_objects_tests()

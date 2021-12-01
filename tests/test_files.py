@@ -33,5 +33,27 @@ def basic_files_upload_tests():
     assert new_file["id"] not in saved_files_ids
 
 
+def big_files_upload_tests():
+    """
+    disabled test: we dont want dessia_api_client size to be hundreds of mb
+    to run only locally
+    a bigfile can be created with :  head -c 500MB /dev/urandom > filepath/filename
+
+    """
+    logging.info('running basic_files_upload_tests')
+    user = TestFactory.get_user()
+
+    resp = user.files.list_files()
+    validate_status_code(resp, 200)
+
+    new_file_name = '500mb_rand_file.txt'
+    resp = user.files.create_file(os.path.join(TestFactory.TEST_DATA_DIR, new_file_name))
+    validate_status_code(resp, 201)
+
+    new_file_name = '1100mb_rand_file.txt'
+    resp = user.files.create_file(os.path.join(TestFactory.TEST_DATA_DIR, new_file_name))
+    validate_status_code(resp, 403)
+
 if __name__ == '__main__':
     basic_files_upload_tests()
+    # big_files_upload_tests()

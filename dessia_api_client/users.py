@@ -9,7 +9,7 @@ from dessia_api_client.clients import PlatformApiClient
 
 
 class PlatformUser:
-    def __init__(self, password, email,
+    def __init__(self, email, password,
                  api_url="https://api.platform.dessia.tech",
                  max_retries=3,
                  retry_interval=3):
