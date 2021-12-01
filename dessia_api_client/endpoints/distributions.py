@@ -7,7 +7,7 @@
 
 """
 
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
 class Distributions:
@@ -32,3 +32,5 @@ class Distributions:
     def delete_distribution(self, dist_id):
         return self.client.delete('/application-distributions/{dist_id}',
                                   path_subs={"dist_id": dist_id})
+
+

@@ -28,11 +28,11 @@
 /marketplace/{element_name}s
 """
 
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
 class Marketplace:
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: PlatformApiClient):
         self.client = client
 
     def get_element(self, element_name, element_id):

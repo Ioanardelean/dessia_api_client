@@ -1,8 +1,8 @@
-from dessia_api_client.users import DessiaUser
+from dessia_api_client.users import PlatformUser
 
 # get an api user
 # replace with proper credentials
-brad = DessiaUser("brad@dessia.tech", "brad_pass1!",
+brad = PlatformUser("brad@dessia.tech", "brad_pass1!",
                   api_url="https://api.platform.dessia.tech")
 
 # run your tests/scripts

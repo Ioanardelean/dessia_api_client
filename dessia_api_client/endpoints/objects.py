@@ -40,7 +40,7 @@ import requests
 import matplotlib.pyplot as plt
 from dessia_api_client.utils.helpers import stringify_dict_keys, instantiate_object, confirm
 from dessia_api_client.utils.filters import EqualityFilter
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 from matplotlib.cm import get_cmap
 
 try:
@@ -52,7 +52,7 @@ except ModuleNotFoundError:
 
 
 class ObjectsEndPoint:
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: PlatformApiClient):
         self.client = client
 
     def get_object_classes(self):

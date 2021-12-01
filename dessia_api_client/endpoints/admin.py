@@ -32,7 +32,7 @@
 """
 
 from dessia_api_client.utils.helpers import confirm
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
 class Admin:

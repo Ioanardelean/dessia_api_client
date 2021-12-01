@@ -7,11 +7,11 @@
 /jobs/{job_id}
 """
 
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
 class Jobs:
-    def __init__(self, client: ApiClient):
+    def __init__(self, client: PlatformApiClient):
         self.client = client
 
     def job_details(self, job_id: int):

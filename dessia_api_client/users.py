@@ -5,10 +5,10 @@ import requests
 
 from dessia_api_client.endpoints import admin, jobs, accounts, applications, files, objects, style, \
     marketplace, organisations, classes, workspaces, distributions
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
-class DessiaUser:
+class PlatformUser:
     def __init__(self, password, email,
                  api_url="https://api.platform.dessia.tech",
                  max_retries=3,
@@ -20,10 +20,10 @@ class DessiaUser:
         :param max_retries:
         :param retry_interval:
         """
-        self.client = ApiClient(email, password,
-                                api_url=api_url,
-                                max_retries=max_retries,
-                                retry_interval=retry_interval)
+        self.client = PlatformApiClient(email, password,
+                                        api_url=api_url,
+                                        max_retries=max_retries,
+                                        retry_interval=retry_interval)
         self.jobs = jobs.Jobs(self.client)
         self.admin = admin.Admin(self.client)
         self.account = accounts.Accounts(self.client)

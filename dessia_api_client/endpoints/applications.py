@@ -8,7 +8,7 @@
 
 """
 
-from dessia_api_client.clients import ApiClient
+from dessia_api_client.clients import PlatformApiClient
 
 
 class Applications:

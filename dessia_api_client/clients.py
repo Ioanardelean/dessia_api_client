@@ -8,7 +8,7 @@ from dessia_api_client.utils.helpers import retry_n_times
 from urllib.parse import urljoin
 
 
-class ApiClient:
+class PlatformApiClient:
     def __init__(self, email, password,
                  api_url="https://api.platform.dessia.tech",
                  max_retries=10,
@@ -35,7 +35,7 @@ class ApiClient:
                               json={"username": self.email,
                                     "password": self.password}
                               )
-            assert r.status_code == 200, f'Failed Authentication fro email : {self.email}'
+            assert r.status_code == 200, f'Failed Authentication from email : {self.email}'
             self._token = r.json()['access_token']
             self._token_expiration_time = jwt.decode(self.token, options={"verify_signature": False})['exp']
         return self._token
