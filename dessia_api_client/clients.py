@@ -20,8 +20,8 @@ class PlatformApiClient:
         :param max_retries: optional
         :param retry_interval: optional
         """
-        self.password = password
         self.email = email
+        self.password = password
         self.api_url = api_url
         self.max_retries = max_retries
         self.retry_interval = retry_interval

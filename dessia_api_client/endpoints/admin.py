@@ -36,7 +36,7 @@ from dessia_api_client.clients import PlatformApiClient
 
 
 class Admin:
-    def __init__(self, client):
+    def __init__(self, client: PlatformApiClient):
         self.client = client
 
     def status(self):
