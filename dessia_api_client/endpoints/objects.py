@@ -31,7 +31,7 @@
 """
 
 import time
-
+import simplejson.errors
 import jwt
 import time
 import getpass
@@ -95,9 +95,16 @@ class ObjectsEndPoint:
     def _wait_for_object_created(self, payload):
         r = self.client.post('/objects',
                              json=payload)
-        if 'task_id' not in r.json():
+        try:
+            rj = r.json()
+        except simplejson.errors.JSONDecodeError:
+            print(r.text)
             return r
-        task_id = r.json()['task_id']
+        
+        if 'task_id' not in rj:
+            return r
+        
+        task_id = rj['task_id']
         while r.status_code != 201:
             print(r.text)
             print('retrying to see if object was inserted')
