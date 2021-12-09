@@ -12,7 +12,7 @@ from dessia_api_client.clients import PlatformApiClient
 
 
 class ClassesEndPoint:
-    def __init__(self, client):
+    def __init__(self, client:PlatformApiClient):
         self.client = client
 
     def get_subclasses(self, object_class: str):
