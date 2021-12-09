@@ -32,7 +32,14 @@ active_apps = brad.applications.get_active_applications()  # see active apps ...
 
 ```
 
+For interactive email/password prompt:
+```
+brad = PlatformUser(api_url="https://api.platform.dessia.tech")
+```
+
 See the script folder for other examples
+
+
 
 ## Issues
 
