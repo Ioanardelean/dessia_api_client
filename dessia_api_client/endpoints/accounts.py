@@ -31,16 +31,12 @@ class Accounts:
                                 json={'email': email,
                                       'password': password,
                                       'first_name': first_name,
-                                      'last_name': last_name})
+                                      'last_name': last_name},
+                                auth=False)
 
     def send_verification_email(self, email):
         return self.client.get('/account/send-verification-code',
                                params={'email': email})
-
-    def create_technical_account(self, name, password):
-        return self.client.post('/technical_accounts/create',
-                                json={'name': name,
-                                      'password': password})
 
     def my_network(self):
         return self.client.get('/account/network')

@@ -1,8 +1,9 @@
-import os
+
 import jwt
 import time
 import requests
 from requests import Response
+import getpass
 
 from dessia_api_client.utils.helpers import retry_n_times
 from urllib.parse import urljoin
@@ -28,9 +29,17 @@ class PlatformApiClient:
         self._token = None
         self._token_expiration_time = 0
 
+    def check_credentials(self):
+        if self.email is None:
+            self.email = input(f'Email for dessia platform @ {self.api_url}: ')
+
+        if self.password is None:
+            self.password = getpass.getpass('Password: ')
+
     @property
     def token(self):
         if (self._token is None) or (self._token_expiration_time and self._token_expiration_time < time.time()):
+            self.check_credentials()
             r = requests.post(urljoin(self.api_url, 'auth'),
                               json={"username": self.email,
                                     "password": self.password}
@@ -46,8 +55,12 @@ class PlatformApiClient:
                         json=None,
                         params=None,
                         files=None,
+                        auth=True,
                         **kwargs):
-        headers = {f'Authorization': f'Bearer {self.token}'}
+        if auth:
+            headers = {'Authorization': f'Bearer {self.token}'}
+        else:
+            headers = {}
         real_path = path
         if path_subs:
             for param, value in path_subs.items():
@@ -68,34 +81,38 @@ class PlatformApiClient:
         return r
 
     # this is repetitive but allow linting with IDE
-    def get(self, path, path_subs=None, json=None, params=None, files=None, **kwargs) -> Response:
+    def get(self, path, path_subs=None, json=None, params=None, files=None, auth=True, **kwargs) -> Response:
         return self.generic_request('get', path,
                                     path_subs=path_subs,
                                     json=json,
                                     params=params,
                                     files=files,
+                                    auth=auth,
                                     **kwargs)
 
-    def post(self, path, path_subs=None, json=None, params=None, files=None, **kwargs) -> Response:
+    def post(self, path, path_subs=None, json=None, params=None, files=None, auth=True, **kwargs) -> Response:
         return self.generic_request('post', path,
                                     path_subs=path_subs,
                                     json=json,
                                     params=params,
                                     files=files,
+                                    auth=auth,
                                     **kwargs)
 
-    def put(self, path, path_subs=None, json=None, params=None, files=None, **kwargs) -> Response:
+    def put(self, path, path_subs=None, json=None, params=None, files=None, auth=True, **kwargs) -> Response:
         return self.generic_request('put', path,
                                     path_subs=path_subs,
                                     json=json,
                                     params=params,
                                     files=files,
+                                    auth=auth,
                                     **kwargs)
 
-    def delete(self, path, path_subs=None, json=None, params=None, files=None, **kwargs) -> Response:
+    def delete(self, path, path_subs=None, json=None, params=None, files=None, auth=True, **kwargs) -> Response:
         return self.generic_request('delete', path,
                                     path_subs=path_subs,
                                     json=json,
                                     params=params,
                                     files=files,
+                                    auth=auth,
                                     **kwargs)
