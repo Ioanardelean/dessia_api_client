@@ -25,9 +25,19 @@ class Applications:
         return self.client.get('/applications/{application_id}/logo',
                                path_subs={"application_id": application_id})
 
-    def update_application(self, application_id):
+    def update_application(self, application_id, name=None, active=None, installed_distribution_id=None):
+        payload = {}
+        if name is not None:
+            payload['name'] = name
+        if active is not None:
+            payload['active'] = active
+        if installed_distribution_id is not None:
+            payload['installed_distribution_id'] = installed_distribution_id
+        if not payload:
+            raise ValueError('Empty payload for request')
         return self.client.post('/applications/{application_id}',
-                                path_subs={"application_id": application_id})
+                                path_subs={"application_id": application_id},
+                                json=payload)
 
     def delete_application(self, application_id):
         return self.client.delete('/applications/{application_id}',
