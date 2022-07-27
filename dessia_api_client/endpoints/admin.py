@@ -39,6 +39,12 @@ class Admin:
     def __init__(self, client: PlatformApiClient):
         self.client = client
 
+    def restart_platform(self):
+        return self.client.get('/admin/restart')
+
+    def restart_workers(self):
+        return self.client.get('/admin/workers/restart')
+
     def status(self):
         return self.client.get('/admin/status')
 
