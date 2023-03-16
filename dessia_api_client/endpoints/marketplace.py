@@ -27,6 +27,10 @@
 /marketplace/brands/{brand_id}
 /marketplace/{element_name}s
 """
+import time
+import matplotlib.pyplot as plt
+
+from dessia_api_client.utils.filters import EqualityFilter
 
 from dessia_api_client.clients import PlatformApiClient
 
@@ -192,7 +196,7 @@ class Marketplace:
                     self.get_element('stock-keeping-unit', sku_id).json()['retailer']['name'],
                     sku_id)
 
-        cmap = get_cmap('jet')
+        cmap = plt.get_cmap('jet')
         sku_colors = {sku_id: cmap(ii / (len(sku_ids))) for ii, sku_id in enumerate(sku_ids)}
         labelled_sku = []
         handles = []
