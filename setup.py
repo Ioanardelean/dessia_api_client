@@ -63,5 +63,4 @@ setup(name='dessia_api_client',
       packages=['dessia_api_client',
                 'dessia_api_client.utils',
                 'dessia_api_client.endpoints'],
-      install_requires=['PyJWT>=2.0.0', 'requests', 'matplotlib', 'simplejson'])
-
+      install_requires=['PyJWT>=2.0.0', 'requests', 'numpy<1.25', 'matplotlib', 'simplejson',])
